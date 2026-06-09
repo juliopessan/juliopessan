@@ -1,0 +1,68 @@
+{
+  "company_id": "example_company",
+  "name": "Empresa Exemplo",
+  "whatsapp_phone_number_id": "SEU_PHONE_NUMBER_ID_AQUI",
+  "active": true,
+
+  "identity": {
+    "assistant_name": "Sofia",
+    "language": "pt-BR",
+    "tone": "profissional e amigável",
+    "avatar_description": "assistente virtual da Empresa Exemplo"
+  },
+
+  "business": {
+    "segment": "varejo",
+    "description": "Loja de roupas e acessórios femininos",
+    "website": "https://empresaexemplo.com.br",
+    "email": "contato@empresaexemplo.com.br",
+    "phone": "(11) 91234-5678",
+    "address": "Rua das Flores, 123 - São Paulo, SP"
+  },
+
+  "hours": {
+    "monday":    { "open": "09:00", "close": "18:00" },
+    "tuesday":   { "open": "09:00", "close": "18:00" },
+    "wednesday": { "open": "09:00", "close": "18:00" },
+    "thursday":  { "open": "09:00", "close": "18:00" },
+    "friday":    { "open": "09:00", "close": "18:00" },
+    "saturday":  { "open": "09:00", "close": "13:00" },
+    "sunday":    null
+  },
+
+  "ai": {
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 500,
+    "temperature": 0.7,
+    "system_prompt_extra": "Você tem acesso às informações dos produtos e serviços da empresa. Sempre tente resolver o problema do cliente antes de transferir para humano.",
+    "human_handoff_keywords": ["falar com atendente", "falar com humano", "atendente humano", "gerente"]
+  },
+
+  "faq": [
+    {
+      "question": "Como faço para trocar um produto?",
+      "answer": "Trocas podem ser feitas em até 30 dias após a compra, com nota fiscal. Basta trazer o produto à loja ou entrar em contato pelo email contato@empresaexemplo.com.br."
+    },
+    {
+      "question": "Vocês fazem entrega?",
+      "answer": "Sim! Fazemos entrega para todo o Brasil pelos Correios e transportadoras parceiras. O prazo varia de 3 a 10 dias úteis dependendo da região."
+    },
+    {
+      "question": "Quais formas de pagamento aceitam?",
+      "answer": "Aceitamos PIX, cartão de crédito (até 12x), cartão de débito e boleto bancário."
+    }
+  ],
+
+  "quick_replies": {
+    "greeting": "Olá! Sou a *{assistant_name}*, assistente virtual da *{company_name}*. Como posso te ajudar hoje?\n\n*1.* Ver horários de funcionamento\n*2.* Informações de entrega\n*3.* Formas de pagamento\n*4.* Falar com atendente",
+    "out_of_hours": "Olá! No momento estamos fora do horário de atendimento. Nosso horário é:\n{business_hours}\n\nDeixe sua mensagem e responderemos assim que possível! 😊",
+    "human_handoff": "Entendido! Vou transferir você para um de nossos atendentes. Por favor, aguarde um momento. ⏳",
+    "farewell": "Foi um prazer te ajudar! Se precisar de mais alguma coisa, é só chamar. Tenha um ótimo dia! 😊"
+  },
+
+  "escalation": {
+    "enabled": true,
+    "notify_email": "atendimento@empresaexemplo.com.br",
+    "notify_message": "Nova solicitação de atendimento humano do número {customer_phone}"
+  }
+}
