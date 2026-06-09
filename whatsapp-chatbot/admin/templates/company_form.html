@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}{{ "Editar" if company else "Nova Empresa" }}{% endblock %}
+{% block page_title %}{{ "Editar — " + company.name if company else "Nova Empresa" }}{% endblock %}
+
+{% block topbar_actions %}
+  {% if company %}
+  <form method="post" action="/admin/companies/{{ company.company_id }}/toggle" style="display:inline">
+    <button type="submit" class="btn btn-ghost btn-sm">
+      {% if company.active %}⏸ Desativar{% else %}▶️ Ativar{% endif %}
+    </button>
+  </form>
+  <form method="post" action="/admin/companies/{{ company.company_id }}/delete" style="display:inline">
+    <button type="submit" class="btn btn-danger btn-sm"
+      data-confirm="Deletar empresa {{ company.name }}? Esta ação não pode ser desfeita.">
+      🗑 Deletar
+    </button>
+  </form>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+
+{% if company %}
+<div class="tabs" data-group="main">
+  <div class="tab active" data-group="main" data-target="tab-geral">Geral</div>
+  <div class="tab" data-group="main" data-target="tab-horarios">Horários</div>
+  <div class="tab" data-group="main" data-target="tab-faq">FAQ ({{ company.faq|length }})</div>
+  <div class="tab" data-group="main" data-target="tab-ia">IA</div>
+  <div class="tab" data-group="main" data-target="tab-msgs">Mensagens</div>
+</div>
+{% endif %}
+
+<!-- TAB GERAL / formulário único se novo -->
+<div class="tab-content {% if not company or tab == 'geral' %}active{% endif %}" data-group="main" data-target="tab-geral">
+<form method="post" action="{{ '/admin/companies/' + company.company_id if company else '/admin/companies/new' }}">
+  <div class="card">
+    <div class="card-title">Identificação</div>
+    <div class="form-grid">
+      {% if not company %}
+      <div class="form-group">
+        <label>ID da empresa *</label>
+        <input type="text" name="company_id" placeholder="minha_loja" required
+          pattern="[a-z0-9_]+" title="Apenas letras minúsculas, números e _"
+          value="{{ company.company_id if company else '' }}">
+      </div>
+      {% endif %}
+      <div class="form-group">
+        <label>Nome da empresa *</label>
+        <input type="text" name="name" required value="{{ company.name if company else '' }}">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp Phone Number ID *</label>
+        <input type="text" name="phone_number_id" required
+          value="{{ company.whatsapp_phone_number_id if company else '' }}"
+          placeholder="Obtido no Meta for Developers">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Assistente Virtual</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nome do assistente</label>
+        <input type="text" name="assistant_name"
+          value="{{ company.identity.assistant_name if company else 'Sofia' }}">
+      </div>
+      <div class="form-group">
+        <label>Tom de voz</label>
+        <input type="text" name="tone"
+          value="{{ company.identity.tone if company else 'profissional e amigável' }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Dados do Negócio</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Segmento</label>
+        <input type="text" name="segment" placeholder="varejo, serviços, saúde..."
+          value="{{ company.business.segment if company else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Email de contato</label>
+        <input type="email" name="email"
+          value="{{ company.business.email if company else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="text" name="phone"
+          value="{{ company.business.phone if company else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Site</label>
+        <input type="text" name="website"
+          value="{{ company.business.website if company else '' }}">
+      </div>
+      <div class="form-group span2">
+        <label>Endereço</label>
+        <input type="text" name="address"
+          value="{{ company.business.address if company else '' }}">
+      </div>
+      <div class="form-group span2">
+        <label>Descrição da empresa</label>
+        <textarea name="description">{{ company.business.description if company else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Escalação para Humano</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Email para notificações</label>
+        <input type="email" name="notify_email"
+          value="{{ company.escalation.notify_email if company else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Notificação ativada</label>
+        <div class="toggle-wrap" style="margin-top:8px">
+          <label class="toggle">
+            <input type="checkbox" name="escalation_enabled"
+              {% if company and company.escalation.enabled %}checked{% endif %}>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="text-muted">Enviar email ao acionar atendente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">
+      💾 {{ "Salvar alterações" if company else "Criar empresa" }}
+    </button>
+    <a href="/admin/companies" class="btn btn-ghost">Cancelar</a>
+  </div>
+</form>
+</div>
+
+<!-- TAB HORÁRIOS -->
+{% if company %}
+<div class="tab-content" data-group="main" data-target="tab-horarios">
+<form method="post" action="/admin/companies/{{ company.company_id }}/hours">
+  <div class="card">
+    <div class="card-title">Horários de Funcionamento</div>
+    <p class="text-muted" style="font-size:12px;margin-bottom:18px">Deixe os campos em branco para marcar o dia como fechado.</p>
+    <div class="hours-grid">
+      {% set days = [
+        ("monday","Segunda"),("tuesday","Terça"),("wednesday","Quarta"),
+        ("thursday","Quinta"),("friday","Sexta"),("saturday","Sábado"),("sunday","Domingo")
+      ] %}
+      {% for key, label in days %}
+      {% set h = company.hours.get(key) %}
+      <div class="hours-row">
+        <label>{{ label }}</label>
+        <div class="hours-inputs">
+          <input type="time" name="{{ key }}_open" value="{{ h.open if h else '' }}">
+          <span>às</span>
+          <input type="time" name="{{ key }}_close" value="{{ h.close if h else '' }}">
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">💾 Salvar horários</button>
+  </div>
+</form>
+</div>
+
+<!-- TAB FAQ -->
+<div class="tab-content" data-group="main" data-target="tab-faq">
+  <div class="card">
+    <div class="card-title">Perguntas Frequentes</div>
+    {% if company.faq %}
+      {% for i, item in company.faq | enumerate %}
+      <div class="faq-item">
+        <div class="faq-text">
+          <div class="faq-q">{{ item.question }}</div>
+          <div class="faq-a">{{ item.answer }}</div>
+        </div>
+        <form method="post" action="/admin/companies/{{ company.company_id }}/faq/{{ i }}/delete">
+          <button type="submit" class="btn btn-danger btn-sm"
+            data-confirm="Remover esta pergunta?">🗑</button>
+        </form>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="icon">❓</div>
+        <p>Nenhuma pergunta cadastrada ainda.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-title">Adicionar pergunta</div>
+    <form method="post" action="/admin/companies/{{ company.company_id }}/faq">
+      <div class="form-grid full">
+        <div class="form-group">
+          <label>Pergunta</label>
+          <input type="text" name="question" placeholder="Como faço para trocar um produto?" required>
+        </div>
+        <div class="form-group">
+          <label>Resposta</label>
+          <textarea name="answer" placeholder="Trocas podem ser feitas em até 30 dias..." required></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">➕ Adicionar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TAB IA -->
+<div class="tab-content" data-group="main" data-target="tab-ia">
+<form method="post" action="/admin/companies/{{ company.company_id }}/ai">
+  <div class="card">
+    <div class="card-title">Configurações de IA</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Modelo Claude</label>
+        <select name="model">
+          {% for m in ["claude-sonnet-4-6","claude-opus-4-8","claude-haiku-4-5-20251001"] %}
+          <option value="{{ m }}" {% if company.ai.model == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Máximo de tokens por resposta</label>
+        <input type="number" name="max_tokens" min="100" max="2000"
+          value="{{ company.ai.max_tokens }}">
+      </div>
+      <div class="form-group span2">
+        <label>Palavras-chave para transferência humana (separadas por vírgula)</label>
+        <input type="text" name="handoff_keywords"
+          value="{{ company.ai.human_handoff_keywords | join(', ') }}">
+      </div>
+      <div class="form-group span2">
+        <label>Instruções extras para o assistente</label>
+        <textarea name="system_prompt_extra" style="min-height:120px">{{ company.ai.system_prompt_extra }}</textarea>
+      </div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">💾 Salvar configurações de IA</button>
+  </div>
+</form>
+</div>
+
+<!-- TAB MENSAGENS -->
+<div class="tab-content" data-group="main" data-target="tab-msgs">
+<form method="post" action="/admin/companies/{{ company.company_id }}/messages">
+  <div class="card">
+    <div class="card-title">Mensagens Automáticas</div>
+    <p class="text-muted" style="font-size:12px;margin-bottom:18px">
+      Use <code>{assistant_name}</code> e <code>{company_name}</code> para personalizar.
+      Em "Fora do horário" use também <code>{business_hours}</code>.
+    </p>
+    <div class="form-grid full">
+      {% set msgs = [
+        ("greeting","Saudação inicial","Enviada quando o cliente envia a primeira mensagem"),
+        ("out_of_hours","Fora do horário","Enviada quando o cliente escreve fora do expediente"),
+        ("human_handoff","Transferência para humano","Enviada ao detectar pedido de atendente"),
+        ("farewell","Despedida","Mensagem de encerramento")
+      ] %}
+      {% for key, label, hint in msgs %}
+      <div class="form-group">
+        <label>{{ label }}</label>
+        <div class="text-muted" style="font-size:11px;margin-bottom:4px">{{ hint }}</div>
+        <textarea name="{{ key }}" style="min-height:90px">{{ company.quick_replies.get(key, '') }}</textarea>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">💾 Salvar mensagens</button>
+  </div>
+</form>
+</div>
+{% endif %}
+{% endblock %}

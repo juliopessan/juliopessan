@@ -1,11 +1,12 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Query
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 
 from config.settings import WHATSAPP_VERIFY_TOKEN, HOST, PORT, load_company_by_phone
 from integrations.whatsapp import extract_message, send_message
 from bot.chatbot import generate_reply, get_greeting
+from admin.panel import router as admin_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,12 +23,18 @@ GREETED: set[str] = set()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log.info("WhatsApp Chatbot iniciado. Aguardando mensagens...")
+    log.info("WhatsApp Chatbot iniciado. Acesse /admin para gerenciar empresas.")
     yield
     log.info("Servidor encerrado.")
 
 
-app = FastAPI(title="WhatsApp Chatbot", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="WhatsApp Chatbot SaaS", version="2.0.0", lifespan=lifespan)
+app.include_router(admin_router)
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse("/admin")
 
 
 @app.get("/webhook")
@@ -45,8 +52,6 @@ async def verify_webhook(
 @app.post("/webhook")
 async def receive_message(request: Request):
     payload = await request.json()
-    log.debug("Payload recebido: %s", payload)
-
     phone_number_id, customer_phone, message_text = extract_message(payload)
 
     if not phone_number_id:
@@ -70,8 +75,7 @@ async def receive_message(request: Request):
 
     if not message_text:
         await send_message(
-            phone_number_id,
-            customer_phone,
+            phone_number_id, customer_phone,
             "Recebi sua mensagem! No momento só consigo processar texto. Por favor, envie uma mensagem escrita. 😊",
         )
         return {"status": "non_text_handled"}
@@ -83,17 +87,15 @@ async def receive_message(request: Request):
         log.info("[%s] Transferência humana solicitada por %s", company_id, customer_phone)
         escalation = company.get("escalation", {})
         if escalation.get("enabled"):
-            notify_msg = escalation.get("notify_message", "").replace(
-                "{customer_phone}", customer_phone
-            )
-            log.info("ESCALATION: %s → %s", escalation.get("notify_email"), notify_msg)
+            notify_msg = escalation.get("notify_message", "").replace("{customer_phone}", customer_phone)
+            log.info("ESCALATION → %s: %s", escalation.get("notify_email"), notify_msg)
 
     return {"status": "ok"}
 
 
 @app.get("/health")
 async def health():
-    return {"status": "online", "service": "WhatsApp Chatbot"}
+    return {"status": "online", "service": "WhatsApp Chatbot SaaS", "version": "2.0.0"}
 
 
 if __name__ == "__main__":

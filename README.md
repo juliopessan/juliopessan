@@ -8,7 +8,7 @@
 
 | Project | Description | Stack |
 |---|---|---|
-| [whatsapp-chatbot](./whatsapp-chatbot/) | Multi-company WhatsApp chatbot powered by Claude AI | Python, FastAPI, Anthropic |
+| [whatsapp-chatbot](./whatsapp-chatbot/) | SaaS WhatsApp chatbot with web admin panel, multi-company support and Claude AI | Python, FastAPI, Anthropic |
 | [commercial-twin](./commercial-twin/) | Digital Twin for sales teams | Next.js, Supabase, HubSpot |
 | [proposal-spark](./proposal-spark/) | AI-powered commercial proposals | React, Vite, Supabase |
 | [requirements-intel](./requirements-intel/) | 5-phase AIOS framework for technical requirements | Python, AIOS |
