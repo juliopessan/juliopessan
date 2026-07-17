@@ -1,0 +1,45 @@
+flowchart LR
+
+%% Users
+subgraph Users
+sales_rep["Sales Rep"]
+quoting_ops["Quoting Ops"]
+sales_ops["Sales Ops"]
+end
+
+%% Identity
+entra["Microsoft Entra ID"]
+
+%% Application
+web_app["Forgent Quoting MVP"]
+
+%% AI
+ai_service["AI Extraction Service"]
+
+%% Data
+doc_store["Document Storage"]
+db_main[("Operational Database")]
+
+%% Analytics
+powerbi["Power BI"]
+
+%% External System
+sf["Salesforce"]
+
+%% Authentication
+sales_rep --> entra
+quoting_ops --> entra
+sales_ops --> entra
+
+entra --> web_app
+
+%% Core MVP Flow
+web_app --> ai_service
+
+ai_service --> doc_store
+ai_service --> db_main
+
+web_app <--> sf
+
+%% Reporting
+db_main --> powerbi
