@@ -1,5 +1,5 @@
 <mxfile host="app.diagrams.net" agent="claude-code" version="24.7.7">
-  <diagram id="forgent-quoting" name="Forgent Quoting MVP 16x9">
+  <diagram id="sales-quoting-mvp" name="Sales Quoting MVP 16x9">
     <mxGraphModel dx="1600" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0" background="#FFFFFF">
       <root>
         <mxCell id="0" />
@@ -40,7 +40,7 @@
         <mxCell id="nEntra" value="Microsoft&#10;Entra ID" style="shape=label;html=1;whiteSpace=wrap;imageAlign=center;imageVerticalAlign=top;imageWidth=40;imageHeight=40;verticalAlign=bottom;align=center;rounded=1;arcSize=12;strokeColor=#2E77D0;fillColor=#F2F7FD;fontSize=11;fontColor=#000000;spacingBottom=6;image=img/lib/azure2/identity/Azure_Active_Directory.svg;" vertex="1" parent="ln">
           <mxGeometry x="315" y="255" width="130" height="96" as="geometry" />
         </mxCell>
-        <mxCell id="nApp" value="Forgent Quoting&#10;MVP (Web App)" style="shape=label;html=1;whiteSpace=wrap;imageAlign=center;imageVerticalAlign=top;imageWidth=40;imageHeight=40;verticalAlign=bottom;align=center;rounded=1;arcSize=12;strokeColor=#2E77D0;fillColor=#F2F7FD;fontSize=11;fontColor=#000000;spacingBottom=6;image=img/lib/azure2/compute/App_Services.svg;" vertex="1" parent="ln">
+        <mxCell id="nApp" value="Sales Quoting&#10;MVP (Web App)" style="shape=label;html=1;whiteSpace=wrap;imageAlign=center;imageVerticalAlign=top;imageWidth=40;imageHeight=40;verticalAlign=bottom;align=center;rounded=1;arcSize=12;strokeColor=#2E77D0;fillColor=#F2F7FD;fontSize=11;fontColor=#000000;spacingBottom=6;image=img/lib/azure2/compute/App_Services.svg;" vertex="1" parent="ln">
           <mxGeometry x="575" y="255" width="130" height="96" as="geometry" />
         </mxCell>
         <mxCell id="nAI" value="AI Extraction&#10;Service" style="shape=label;html=1;whiteSpace=wrap;imageAlign=center;imageVerticalAlign=top;imageWidth=40;imageHeight=40;verticalAlign=bottom;align=center;rounded=1;arcSize=12;strokeColor=#7C4DC4;fillColor=#F7F3FC;fontSize=11;fontColor=#000000;spacingBottom=6;image=img/lib/azure2/ai_machine_learning/Form_Recognizers.svg;" vertex="1" parent="ln">
@@ -69,7 +69,7 @@
         <mxCell id="eDBBI" value="Reporting" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0E7C7B;strokeWidth=1.5;fontSize=10;fontStyle=1;fontColor=#0E7C7B;labelBackgroundColor=#FFFFFF;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="le" source="nDB" target="nBI"><mxGeometry x="-0.4" relative="1" as="geometry"><Array as="points"><mxPoint x="1320" y="428" /><mxPoint x="1320" y="303" /></Array></mxGeometry></mxCell>
         <mxCell id="eAppSF" value="Bi-directional sync" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7C4DC4;strokeWidth=1.5;fontSize=10;fontStyle=1;fontColor=#7C4DC4;labelBackgroundColor=#FFFFFF;endArrow=block;endFill=1;startArrow=block;startFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="le" source="nApp" target="nSF"><mxGeometry x="-0.2" relative="1" as="geometry" /></mxCell>
 
-        <mxCell id="title" value="Forgent Quoting MVP — Solution Architecture" style="text;html=1;align=left;fontSize=18;fontStyle=1;fontColor=#333333;" vertex="1" parent="lb">
+        <mxCell id="title" value="Sales Quoting MVP — Solution Architecture" style="text;html=1;align=left;fontSize=18;fontStyle=1;fontColor=#333333;" vertex="1" parent="lb">
           <mxGeometry x="40" y="16" width="800" height="30" as="geometry" />
         </mxCell>
         <mxCell id="sig" value="Microsoft Azure · Power Platform" style="text;html=1;align=right;fontSize=13;fontStyle=1;fontColor=#737373;" vertex="1" parent="lb">
