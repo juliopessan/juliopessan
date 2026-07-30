@@ -1,0 +1,68 @@
+flowchart LR
+
+    request["Document Request<br/>Solicitor, Paralegal or Client"]
+    intake["Capture Document Requirements"]
+    matterData["Retrieve Matter and Client Data"]
+    classify["Classify Document Type"]
+    templateSelector["Select Approved Template"]
+    clauseLibrary["Approved Clause Library"]
+    precedentSearch["Search Internal Precedents"]
+    documentGenerator["Generate First Draft"]
+    fieldValidation["Validate Mandatory Fields"]
+    consistencyCheck["Check Names, Dates, Amounts and References"]
+    complianceCheck["Check Regulatory and Firm Policies"]
+    riskAnalysis["Identify Legal and Commercial Risks"]
+    citationCheck["Validate Legal References and Citations"]
+    confidence{"Confidence Threshold Met?"}
+    humanReview["Solicitor Review"]
+    amendments{"Amendments Required?"}
+    approval["Partner or Authorised Approver"]
+    approved{"Document Approved?"}
+    clientReview["Send to Client or Counterparty"]
+    negotiation["Receive Comments or Redlines"]
+    versionControl["Create New Controlled Version"]
+    signature["Electronic Signature"]
+    filing["File or Submit Document"]
+    repository["Store in Document Management System"]
+    audit["Record Audit Trail"]
+    deadlineUpdate["Update Matter Tasks and Deadlines"]
+    notification["Notify Relevant Stakeholders"]
+
+    request --> intake
+    intake --> matterData
+    matterData --> classify
+    classify --> templateSelector
+
+    clauseLibrary --> documentGenerator
+    precedentSearch --> documentGenerator
+    templateSelector --> documentGenerator
+    matterData --> documentGenerator
+
+    documentGenerator --> fieldValidation
+    fieldValidation --> consistencyCheck
+    consistencyCheck --> complianceCheck
+    complianceCheck --> riskAnalysis
+    riskAnalysis --> citationCheck
+    citationCheck --> confidence
+
+    confidence -->|No| humanReview
+    confidence -->|Yes| humanReview
+
+    humanReview --> amendments
+    amendments -->|Yes| documentGenerator
+    amendments -->|No| approval
+
+    approval --> approved
+    approved -->|No| documentGenerator
+    approved -->|Yes| clientReview
+
+    clientReview --> negotiation
+    negotiation -->|Changes Requested| versionControl
+    versionControl --> documentGenerator
+    negotiation -->|Accepted| signature
+
+    signature --> filing
+    filing --> repository
+    repository --> audit
+    audit --> deadlineUpdate
+    deadlineUpdate --> notification
