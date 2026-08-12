@@ -1,0 +1,43 @@
+flowchart TD
+
+user["AI Consumers<br/>Claude and future tools"] --> mcp_hub["Existing MCP Hub<br/>Azure API Management"]
+
+mcp_hub --> mcp_ds["MCP Data Source Servers"]
+mcp_hub --> mcp_bu["MCP BU Servers"]
+
+mcp_ds --> router["Retrieval Router and Policy Orchestrator"]
+mcp_bu --> router
+
+router --> sem["Semantic Query Service"]
+router --> hyb["Hybrid Retrieval Service"]
+router --> graphq["Graph Query Service"]
+router --> pol["Authorization and Policy Engine"]
+
+sem --> snow["Snowflake EDW and approved extracts"]
+hyb --> search["Azure AI Search"]
+graphq --> kg["BU Knowledge Graph Store"]
+
+ingest["Ingestion and Preparation Pipeline"] --> raw["Raw Distribution Zone"]
+ingest --> parse["Document Parsing and Extraction"]
+ingest --> sani["Sanitization and Blinding"]
+ingest --> embed["Embedding Service"]
+ingest --> search
+ingest --> kg
+ingest --> meta["Metadata and Lineage Store"]
+
+sp["SharePoint and M365"]
+box["Box"]
+sf["Salesforce"]
+erp["Prime Agresso SAP CDW"]
+tax["Taxonomy and curated libraries"]
+
+sp --> ingest
+box --> ingest
+sf --> ingest
+erp --> ingest
+tax --> ingest
+
+pol --> idp["SSO and Identity Attributes"]
+meta --> obs["OpenTelemetry and Audit Pipeline"]
+router --> obs
+mcp_hub --> obs

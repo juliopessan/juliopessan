@@ -1,0 +1,88 @@
+flowchart TD
+
+user["Business User"]
+teams["Teams Apps"]
+web["Optional Web UI"]
+apim["API Management"]
+
+subgraph app
+orchestrator["Research Orchestrator"]
+config["Configuration Service"]
+policy["Guardrail Policy Service"]
+report["Report Service"]
+history["Run History Service"]
+end
+
+subgraph workflow
+durable["Durable Functions"]
+bus["Service Bus"]
+end
+
+subgraph foundry
+aif["Azure AI Foundry Runtime"]
+planner["Planning Agent"]
+search_agent["Search Agent"]
+verify_agent["Verification Agent"]
+writer["Report Agent"]
+router["Model Routing Policy"]
+evals["Evaluation and Safety Controls"]
+end
+
+subgraph data
+sql["Azure SQL Database"]
+blob["Blob Storage"]
+ais["Azure AI Search"]
+docint["Document Intelligence"]
+end
+
+subgraph enterprise
+entra["Microsoft Entra ID"]
+kv["Key Vault"]
+sp["SharePoint Online"]
+graph["Microsoft Graph"]
+monitor["Azure Monitor"]
+end
+
+subgraph ext
+sources["Trusted External Sources"]
+end
+
+user --> teams
+user --> web
+teams --> apim
+web --> apim
+apim --> orchestrator
+apim --> config
+orchestrator --> durable
+durable --> bus
+bus --> aif
+aif --> planner
+aif --> search_agent
+aif --> verify_agent
+aif --> writer
+aif --> router
+aif --> evals
+planner --> sql
+search_agent --> blob
+search_agent --> ais
+search_agent --> sources
+verify_agent --> sql
+verify_agent --> blob
+verify_agent --> sources
+writer --> blob
+writer --> sp
+writer --> graph
+config --> sql
+history --> sql
+history --> ais
+orchestrator --> history
+orchestrator --> policy
+policy --> sql
+apim --> entra
+orchestrator --> entra
+aif --> kv
+orchestrator --> monitor
+durable --> monitor
+aif --> monitor
+docint --> blob
+orchestrator --> docint
