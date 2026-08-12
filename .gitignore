@@ -1,0 +1,3 @@
+# draw.io desktop app backup/temp files
+*.drawio.bkp
+*.drawio.dtmp
