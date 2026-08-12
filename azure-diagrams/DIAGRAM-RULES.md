@@ -50,8 +50,9 @@ Um diagrama pode combinar os dois modos implementados quando há um processo de 
 - **MCP oficial do draw.io** registrado no Claude Code (escopo usuário): `drawio` → `https://mcp.draw.io/mcp` (Streamable HTTP). Usar as ferramentas desse MCP quando disponíveis na sessão; caso contrário, gerar o XML `.drawio` diretamente (mesmo formato). Alternativa local: `npx -y @drawio/mcp` (pacote oficial `jgraph/drawio-mcp`, suporta XML draw.io, CSV e Mermaid).
 - **O Mermaid é a fonte lógica da verdade**; o layout é semântico, nunca a posição literal do Mermaid. Guardar o `.mmd` de origem junto do `.drawio`.
 - Usar **nomes oficiais dos serviços Microsoft/Azure** nos rótulos.
-- Pipeline: `Mermaid/descrição → layout semântico → .drawio nativo editável → exportes (SVG/PNG/PDF/PPT)`.
+- Pipeline: `Mermaid/descrição → layout semântico → .drawio nativo editável → validação (MCP create_diagram + revisão visual) → render final em app.diagrams.net → exportes (SVG/PNG/PDF/PPT)`.
 - Validar que cada ícone, rótulo e conector está ligado ao componente correto antes de entregar (revisão visual renderizada obrigatória).
+- **Render final obrigatório em `https://app.diagrams.net/`**: após o diagrama passar na validação estrutural (MCP `create_diagram`) e na revisão visual (screenshot), abrir o `.drawio` final diretamente no editor web oficial para entrega interativa/editável ao usuário — não apenas a prévia estática. Método: gerar uma página HTML local com `window.location.replace("https://app.diagrams.net/?splash=0#R" + encodeURIComponent(xml))`, servir via `python3 -m http.server` numa porta livre, e navegar até ela no Browser pane (o fragmento `#R<xml>` evita colar o XML inteiro na URL do `navigate`, que tem limite de tamanho). Ao final, ajustar `Ctrl/Cmd+Shift+H` para caber a página na tela. Encerrar o servidor local depois que a página carregar (o diagrama já ficou no estado do navegador).
 
 ## 0.1 Idioma
 - **Todo o conteúdo do diagrama é EN-US** (rótulos de nós e arestas, títulos de zonas, legenda, título) — os projetos são 100% EN-US. A conversa com o usuário permanece em PT-BR.
