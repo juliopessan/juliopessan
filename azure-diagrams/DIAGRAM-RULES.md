@@ -4,6 +4,18 @@ Regras obrigatórias para TODA geração de diagramas `.drawio` a partir de Merm
 
 > Inspirado por ideias do projeto [archify](https://github.com/tt-a1i/archify) (jul/2026): taxonomia de códigos de regra para diagnósticos estruturados (§0.2) e seleção explícita de modo antes de desenhar (§0.3). Estrutura, pipeline e estilo visual existentes permanecem inalterados.
 
+## 0.1a Pacotes de ícones oficiais offline
+
+Além da validação online via `search_shapes` / HTTP HEAD contra `app.diagrams.net/img/lib/azure2/...` (seção 5), o repositório mantém uma cópia local dos pacotes oficiais de ícones da Microsoft em `assets/icon-packs/`, para os casos em que o serviço de ícones não tem um SVG azure2 equivalente (M365, Power Platform) ou quando é preciso trabalhar offline:
+
+| Arquivo | Conteúdo | Uso |
+|---|---|---|
+| `Azure_Public_Service_Icons_V23.zip` | Ícones oficiais de serviço Azure (v23), organizados por categoria | Fallback/conferência para ícones azure2 já usados; fonte para categorias não cobertas pela lib embutida do draw.io |
+| `Power-Platform-icons-scalable.zip` | Ícones oficiais Power Platform (Power Apps, Power Automate, Power Pages, Dataverse, Copilot Studio, AI Builder) | Diagramas que envolvem Power Platform — sem equivalente na lib azure2 |
+| `2024-microsoft-365-content-icons.zip` | Ícones oficiais M365 (Teams, SharePoint, Outlook, etc., múltiplas variações de cor/tamanho) | Diagramas com componentes M365 (ex.: SharePoint Online, Teams Apps) — hoje representados como cards cinza sem ícone; esses pacotes permitem evoluir para ícone oficial embutido via base64/data URI quando necessário |
+
+Regra de uso: preferir sempre a lib `azure2` embutida do draw.io (validada via HTTP 200) quando o serviço é nativamente Azure. Só recorrer a estes pacotes locais quando o serviço pertence a M365/Power Platform (fora do catálogo azure2) — nesse caso, extrair o SVG necessário do zip, embutir como `image=data:image/svg+xml;base64,...` no estilo do nó, e marcar na legenda com `*` (AZD-403, proxy/fonte alternativa).
+
 ## 0.2 Taxonomia de códigos de regra (AZD-xxx)
 
 Toda violação encontrada durante autocorreção ou revisão deve ser referenciada pelo código, não só descrita em prosa — facilita rastrear "o que foi corrigido" entre versões de um diagrama e comunicar qualidade de forma objetiva (ex.: em um relatório de entrega: "0 violações AZD abertas").
