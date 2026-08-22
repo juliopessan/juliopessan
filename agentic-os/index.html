@@ -121,7 +121,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
 
 /* ---------- micro apps ---------- */
 .apps{display:flex;flex-direction:column}
-.app{display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:var(--r-sm);text-align:left;width:100%;transition:background .15s}
+.app{text-decoration:none;color:inherit;display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:var(--r-sm);text-align:left;width:100%;transition:background .15s}
 .apps li+li .app{border-top:1px solid var(--line-soft)}
 .app:hover{background:var(--raise)}
 .app__icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--ground);border:1px solid var(--line);flex:none}
@@ -129,7 +129,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
 .app__body{min-width:0;flex:1;display:block}
 .app__name{display:block;font-weight:600;font-size:13px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app__desc{display:block;font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.app__key{font:500 10px/1 var(--mono);color:var(--ink-3);border:1px solid var(--line);border-radius:5px;padding:4px 6px;flex:none}
+.app__key{font:500 9.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line);border-radius:5px;padding:5px 7px;flex:none}
 .app:hover .app__key{color:var(--ember);border-color:rgba(255,107,44,.4)}
 
 /* ---------- clock ---------- */
@@ -152,6 +152,15 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
 .ev--now .ev__n{color:var(--ink)}
 .ev--now::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:2px;background:var(--ember);border-radius:2px}
 .ev--past{opacity:.45}
+.foot{font:400 10px/1.5 var(--mono);color:var(--ink-3);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.foot .dot{width:5px;height:5px}
+.foot a{color:var(--ember);text-decoration:none;border-bottom:1px solid rgba(255,107,44,.35)}
+.foot a:hover{border-bottom-color:var(--ember)}
+.foot[data-k="live"] .dot{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+.foot[data-k="stale"] .dot{background:var(--amber)}
+.foot[data-k="err"] .dot{background:var(--crit)}
+.foot[data-k="off"] .dot{background:var(--ink-3)}
+.void{font-size:12.5px;color:var(--ink-3);padding:10px 0;font-style:italic}
 
 /* ---------- stage ---------- */
 .stagewrap{padding:20px 18px 16px;align-items:center;gap:16px}
@@ -218,7 +227,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
 .mix__bar{display:flex;gap:2px;height:7px}
 .mix__bar i{background:var(--k);border-radius:2px;display:block}
 .mix__key{display:flex;gap:5px 12px;flex-wrap:wrap}
-.mix__key span{display:inline-flex;align-items:center;gap:5px;font:500 9.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.mix__key span{display:inline-flex;align-items:center;gap:5px;font:500 10px/1 var(--mono);letter-spacing:.04em;color:var(--ink-3)}
 .mix__key b{color:var(--ink-2)}
 
 /* ---------- skills ---------- */
@@ -310,7 +319,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
     <div class="chips">
       <span class="chip"><i class="dot"></i>Sincronizado <b class="num" id="syncAt">—</b></span>
       <span class="chip chip--muted"><i class="dot"></i>Opus 5 · esforço alto</span>
-      <span class="chip chip--muted"><i class="dot"></i><b class="num" id="rtCount">0</b> rotinas ativas</span>
+      <span class="chip chip--muted"><i class="dot"></i><span id="rtCount">—</span></span>
     </div>
   </header>
 
@@ -352,6 +361,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
         <div class="zones" id="zones"></div>
         <hr class="rule">
         <ul class="agenda" id="agenda"></ul>
+        <p class="foot" id="liveCal"></p>
       </section>
 
     </div>
@@ -390,6 +400,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
         </div>
 
         <div class="legend" id="legend"></div>
+        <p class="foot" id="liveDrive"></p>
         <p class="stagenote" id="note">A órbita pausa enquanto você busca ou aponta para o anel. Toque numa peça para ver de onde ela veio.</p>
       </section>
     </div>
@@ -415,6 +426,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
           <div class="mix__bar" id="mixBar"></div>
           <div class="mix__key" id="mixKey"></div>
         </div>
+        <p class="foot" id="liveMail"></p>
       </section>
 
       <section class="panel" aria-labelledby="h-skills">
@@ -442,6 +454,7 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
             <tbody id="rtBody"></tbody>
           </table>
         </div>
+        <p class="foot" id="rtNote"></p>
       </section>
 
     </div>
@@ -452,22 +465,22 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
     <div class="arms__c">
       <span class="arms__k">A · Aplicações</span>
       <span class="arms__v" id="armsA">0</span>
-      <span class="arms__d">micro apps e conectores ligados ao workspace</span>
+      <span class="arms__d">conectores ativos na conta · 5 atalhos no trilho</span>
     </div>
     <div class="arms__c">
       <span class="arms__k">R · Rotinas</span>
       <span class="arms__v" id="armsR">0</span>
-      <span class="arms__d">tarefas agendadas, 8 delas rodando na nuvem</span>
+      <span class="arms__d">tarefas agendadas, ambas rodando na nuvem</span>
     </div>
     <div class="arms__c">
       <span class="arms__k">M · Memória</span>
       <span class="arms__v" id="armsM">0</span>
-      <span class="arms__d">arquivos roteadores acima de 60k arquivos</span>
+      <span class="arms__d">departamentos roteando as skills do workspace</span>
     </div>
     <div class="arms__c">
       <span class="arms__k">S · Skills</span>
       <span class="arms__v" id="armsS">0</span>
-      <span class="arms__d">SOPs versionadas, 9 com referências ricas</span>
+      <span class="arms__d">skills próprias instaladas nesta sessão</span>
     </div>
   </section>
 
@@ -492,11 +505,11 @@ const OS = {
   ],
 
   microApps: [
-    { icon:'image',   name:'Galeria',        desc:'Imagens e vídeos gerados, em grade masonry', key:'⌘1' },
-    { icon:'brain',   name:'Segundo Cérebro',desc:'O workspace inteiro como mapa vivo',         key:'⌘2' },
-    { icon:'diagram', name:'Prancheta Azure',desc:'Diagramas draw.io prontos pra colar no deck',key:'⌘3' },
-    { icon:'doc',     name:'Forja de Propostas', desc:'Do briefing ao PDF com o brand aplicado',key:'⌘4' },
-    { icon:'chart',   name:'Radar de Deals',  desc:'Pipeline, esforço estimado e custo cloud',  key:'⌘5' }
+    { icon:'image',   name:'Artifacts',   desc:'Tudo que o Claude Code publicou',   url:'https://claude.ai/code/artifacts' },
+    { icon:'file',    name:'Drive',       desc:'Origem do anel de artefatos',       url:'https://drive.google.com' },
+    { icon:'diagram', name:'azure-diagrams-plugin', desc:'Mermaid → draw.io com ícones Azure', url:'https://github.com/juliopessan/azure-diagrams-plugin' },
+    { icon:'code',    name:'juliopessan', desc:'Repositório do perfil e projetos',  url:'https://github.com/juliopessan/juliopessan' },
+    { icon:'bolt',    name:'Routines',    desc:'Tarefas agendadas na nuvem',        url:'https://claude.ai/settings/routines' }
   ],
 
   agenda: [
@@ -548,32 +561,30 @@ const OS = {
   ],
 
   routines: [
-    { at:'06:30', name:'Varredura de entregáveis',   where:'nuvem',   result:'ok' },
-    { at:'08:00', name:'Digest do YouTube → rascunho',where:'nuvem',  result:'ok' },
-    { at:'11:00', name:'Pulso da comunidade',        where:'nuvem',   result:'ok' },
-    { at:'12:30', name:'Triagem de propostas',       where:'local',   result:'falhou' },
-    { at:'14:00', name:'Reconciliação de notas',     where:'local',   result:'ok' },
-    { at:'16:30', name:'Checagem do pipeline',       where:'nuvem',   result:'ok' },
-    { at:'19:00', name:'Rascunhos de relatório',     where:'nuvem',   result:'ok' },
-    { at:'21:30', name:'Ritual de encerramento',     where:'local',   result:'ok' },
-    { at:'23:45', name:'Snapshot do workspace',      where:'nuvem',   result:'ok' }
+    { at:'08:00', name:'Newsletter Maestro — artigo pronto pro Medium', where:'nuvem', enabled:true,  result:'ok' },
+    { at:'09:00', name:'Shortlist Avanade — candidatos do dia',          where:'nuvem', enabled:false, result:'ok' }
   ],
+  routinesNote: 'snapshot de 22 ago · Routines não expõe conector, então esta lista não é ao vivo',
 
   /* memória — arquivos roteadores, o coração do Segundo Cérebro */
   brain: {
-    root: { file:'CLAUDE.md', note:'roteador raiz · aponta para 4 departamentos' },
+    root: { file:'CLAUDE.md', note:'roteador raiz · aponta para 6 departamentos' },
     depts: [
       { name:'Consultoria', file:'consultoria.md', items:[
         '/ai-solutions-architect','/fde-forward-deployed-engineering','/azure-diagram',
-        'refs/arquiteturas-referencia/','refs/tabela-custos-cloud.md'] },
+        '/governance-guideline-playbook','/deal-influence-engine'] },
       { name:'Conteúdo', file:'conteudo.md', items:[
-        '/newsletter-maestro','/humanizer','/linkedin-brand-planner',
-        'refs/tom-de-voz.md','refs/ganchos-que-funcionaram.md'] },
+        '/newsletter-maestro','/humanizer','/linkedin-brand-planner'] },
       { name:'Marca', file:'marca.md', items:[
-        '/avanade-style-guide','/accenture-style-guide','/company-hero-ebook-style',
-        'refs/brand.html','refs/paletas/'] },
-      { name:'Produtos', file:'produtos.md', items:[
-        'orion/','whatsapp-chatbot/','proposal-spark/','requirements-intel/'] }
+        '/avanade-style-guide','/avanade-storytelling','/accenture-style-guide',
+        '/company-hero-ebook-style'] },
+      { name:'Documentos', file:'documentos.md', items:[
+        '/docx','/pptx','/xlsx','/pdf','/tech-docs-review-squad'] },
+      { name:'Time e talento', file:'time.md', items:[
+        '/candidate-profile-evaluator','/enterprise-skill-creator','/evolve-skills'] },
+      { name:'Web e produto', file:'produto.md', items:[
+        '/awwwards-portfolio-builder','/portfolio-template-production',
+        '/ai-native-business-designer'] }
     ]
   },
 
@@ -616,7 +627,9 @@ const OS = {
     video:  { label:'Vídeo',    color:'var(--ember)' }
   },
 
-  memoryRouters: 14
+  memoryRouters: 7,
+  skillCount: 20,
+  connectorCount: 15
 };
 
 /* ---------------- ícones ---------------- */
@@ -638,18 +651,19 @@ const ICONS = {
 const svg = (name, cls='') =>
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="'+cls+'" aria-hidden="true"><path d="'+ICONS[name]+'"/></svg>';
 const $  = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const el = (tag, cls, html) => { const n=document.createElement(tag); if(cls)n.className=cls; if(html!=null)n.innerHTML=html; return n; };
 
 /* ---------------- micro apps ---------------- */
 $('#apps').innerHTML = OS.microApps.map(a => `
-  <li><button class="app" data-app="${a.name}">
+  <li><a class="app" href="${a.url}" target="_blank" rel="noopener">
     <span class="app__icon">${svg(a.icon)}</span>
     <span class="app__body">
       <span class="app__name">${a.name}</span>
       <span class="app__desc">${a.desc}</span>
     </span>
-    <kbd class="app__key">${a.key}</kbd>
-  </button></li>`).join('');
+    <span class="app__key">abrir</span>
+  </a></li>`).join('');
 
 /* ---------------- relógio, fusos, agenda ---------------- */
 const hm = (tz, d=new Date()) => new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:tz}).format(d);
@@ -678,33 +692,41 @@ function tickClock(){
   document.querySelectorAll('[data-tz]').forEach(n => n.textContent = hm(n.dataset.tz));
 }
 
-function renderAgenda(){
+let AGENDA = OS.agenda;
+function renderAgenda(list){
+  if(list) AGENDA = list;
   const n = nowMin();
-  $('#agenda').innerHTML = OS.agenda.map(e => {
-    const s = minutes(e.at), end = s + e.dur;
-    const cls = n >= s && n < end ? 'ev ev--now' : (n >= end ? 'ev ev--past' : 'ev');
+  if(!AGENDA.length){ $('#agenda').innerHTML = '<li class="void">Nada na agenda hoje.</li>'; return; }
+  $('#agenda').innerHTML = AGENDA.map(e => {
+    const st = minutes(e.at), end = st + e.dur;
+    const now = !e.allDay && n >= st && n < end;
+    const cls = e.allDay ? 'ev' : (now ? 'ev ev--now' : (n >= end ? 'ev ev--past' : 'ev'));
     const k = OS.agendaColors[e.kind];
     return `<li class="${cls}">
-      <span class="ev__t">${e.at}</span>
+      <span class="ev__t">${e.allDay ? 'dia' : e.at}</span>
       <span>
-        <span class="ev__n" style="--k:${k}"><i class="dot"></i>${e.name}</span>
-        <span class="ev__m">${e.meta}${n >= s && n < end ? ' · agora' : ''}</span>
+        <span class="ev__n" style="--k:${k}"><i class="dot"></i>${esc(e.name)}</span>
+        <span class="ev__m">${esc(e.meta)}${now ? ' · agora' : ''}</span>
       </span>
     </li>`;
   }).join('');
 }
 
 /* ---------------- e-mail ---------------- */
-$('#mailN').textContent = OS.email.total;
-$('#flags').innerHTML = OS.email.flagged.map(f => `
-  <li><button class="flag">
-    ${svg('flag')}
-    <span class="flag__s">${f.subject}</span>
-    <span class="flag__a">${f.age}</span>
-  </button></li>`).join('');
-const mixTotal = OS.email.mix.reduce((a,b) => a + b.n, 0);
-$('#mixBar').innerHTML = OS.email.mix.map(m => `<i style="--k:${m.color};flex:${m.n}" title="${m.label}: ${m.n}"></i>`).join('');
-$('#mixKey').innerHTML = OS.email.mix.map(m => `<span><i class="dot" style="background:${m.color}"></i>${m.label} <b class="num">${m.n}</b></span>`).join('');
+function renderMail(m){
+  $('#mailN').textContent = m.total;
+  $('#flags').innerHTML = m.flagged.length
+    ? m.flagged.map(f => `
+      <li><button class="flag" ${f.url ? `data-url="${f.url}"` : ''}>
+        ${svg('flag')}
+        <span class="flag__s">${esc(f.subject)}</span>
+        <span class="flag__a">${f.age}</span>
+      </button></li>`).join('')
+    : '<li class="void">Nada sinalizado — caixa sob controle.</li>';
+  $('#mixBar').innerHTML = m.mix.map(x => `<i style="--k:${x.color};flex:${x.n}" title="${esc(x.label)}: ${x.n}"></i>`).join('');
+  $('#mixKey').innerHTML = m.mix.map(x => `<span><i class="dot" style="background:${x.color}"></i>${esc(x.label)} <b class="num">${x.n}</b></span>`).join('');
+}
+renderMail(OS.email);
 
 /* ---------------- deck de skills ---------------- */
 function cmdFor(s){
@@ -757,14 +779,18 @@ $('#deck').addEventListener('click', e => {
 /* ---------------- rotinas ---------------- */
 function renderRoutines(){
   const n = nowMin();
-  const nextIdx = OS.routines.findIndex(r => minutes(r.at) > n);
-  $('#rtBody').innerHTML = OS.routines.map((r,i) => {
-    const past = minutes(r.at) <= n;
-    let st = past ? (r.result === 'ok' ? ['st--ok','concluída'] : ['st--fail','falhou'])
-                  : (i === nextIdx ? ['st--next','próxima'] : ['','na fila']);
-    return `<tr data-next="${i===nextIdx}" data-past="${past}">
+  const active = OS.routines.filter(r => r.enabled);
+  const nextAt = active.map(r => minutes(r.at)).filter(m => m > n).sort((a,b) => a-b)[0];
+  $('#rtBody').innerHTML = OS.routines.map(r => {
+    const m = minutes(r.at), past = m <= n;
+    let st;
+    if(!r.enabled)          st = ['', 'pausada'];
+    else if(m === nextAt)   st = ['st--next', 'próxima'];
+    else if(past)           st = r.result === 'ok' ? ['st--ok','concluída'] : ['st--fail','falhou'];
+    else                    st = ['', 'na fila'];
+    return `<tr data-next="${r.enabled && m === nextAt}" data-past="${r.enabled && past}" ${r.enabled ? '' : 'style="opacity:.5"'}>
       <td class="rt__t">${r.at}</td>
-      <td class="rt__c"><span class="rt__n"><em>${r.name}</em><span class="rt__w">${r.where}</span></span></td>
+      <td class="rt__c"><span class="rt__n"><em>${esc(r.name)}</em><span class="rt__w">${r.where}</span></span></td>
       <td><span class="st ${st[0]}">${st[1]}</span></td>
     </tr>`;
   }).join('');
@@ -772,33 +798,44 @@ function renderRoutines(){
 
 /* ---------------- anel de artefatos ---------------- */
 const ring = $('#ring'), stage = $('#stage');
-ring.innerHTML = OS.artifacts.map((a,i) => {
-  const ang = (i * 360 / OS.artifacts.length).toFixed(3);
-  return `<div class="node" style="--a:${ang}deg" data-kind="${a.k}" data-i="${i}">
-    <button class="node__btn" style="animation-delay:0s" aria-label="${a.t} — ${OS.kinds[a.k].label}, ${a.d}">${svg(a.k === 'code' ? 'code' : a.k)}</button>
-    <span class="node__n">${a.t}</span>
-  </div>`;
-}).join('');
-$('#artCount').textContent = OS.artifacts.length;
+let ART = OS.artifacts;
+function renderRing(list){
+  if(list) ART = list;
+  ring.innerHTML = ART.map((a,i) => {
+    const ang = (i * 360 / ART.length).toFixed(3);
+    return `<div class="node" style="--a:${ang}deg" data-kind="${a.k}" data-i="${i}">
+      <button class="node__btn" aria-label="${esc(a.t)} — ${OS.kinds[a.k].label}, ${a.d}">${svg(a.k === 'code' ? 'code' : a.k)}</button>
+      <span class="node__n">${esc(a.t)}</span>
+    </div>`;
+  }).join('');
+  $('#artCount').textContent = ART.length;
+  renderLegend();
+  sizeRing();
+  applyFilter();
+}
 
-const sizeRing = () => {
+function sizeRing(){
   const inset = stage.clientWidth < 520 ? 22 : 30;
-  ring.style.setProperty('--rad', Math.max(80, stage.clientWidth / 2 - inset) + 'px');
-};
-new ResizeObserver(sizeRing).observe(stage); sizeRing();
+  const base = Math.max(80, stage.clientWidth / 2 - inset);
+  const fill = Math.min(1, Math.max(0.56, (ART.length || 1) / 14));
+  ring.style.setProperty('--rad', Math.round(base * fill) + 'px');
+}
+new ResizeObserver(sizeRing).observe(stage);
 
-const counts = {};
-OS.artifacts.forEach(a => counts[a.k] = (counts[a.k] || 0) + 1);
-$('#legend').innerHTML = Object.entries(OS.kinds)
-  .filter(([k]) => counts[k])
-  .map(([k,v]) => `<button data-kind="${k}" aria-pressed="false" style="--k:${v.color}"><i class="dot"></i>${v.label} <b class="num">${counts[k]}</b></button>`).join('');
+function renderLegend(){
+  const counts = {};
+  ART.forEach(a => counts[a.k] = (counts[a.k] || 0) + 1);
+  $('#legend').innerHTML = Object.entries(OS.kinds)
+    .filter(([k]) => counts[k])
+    .map(([k,v]) => `<button data-kind="${k}" aria-pressed="${kindFilter===k}" style="--k:${v.color}"><i class="dot"></i>${v.label} <b class="num">${counts[k]}</b></button>`).join('');
+}
 
 let query = '', kindFilter = null;
 function applyFilter(){
   const q = query.trim().toLowerCase();
   let hits = 0;
   document.querySelectorAll('.node').forEach(n => {
-    const a = OS.artifacts[+n.dataset.i];
+    const a = ART[+n.dataset.i];
     const hay = (a.t + ' ' + a.c + ' ' + OS.kinds[a.k].label).toLowerCase();
     const ok = (!q || hay.includes(q)) && (!kindFilter || a.k === kindFilter);
     const active = q || kindFilter;
@@ -808,7 +845,7 @@ function applyFilter(){
   });
   stage.dataset.paused = (query || kindFilter) ? 'true' : (pauseOn ? 'true' : 'false');
   $('#note').textContent = (query || kindFilter)
-    ? `${hits} de ${OS.artifacts.length} peças correspondem. Órbita pausada enquanto você procura.`
+    ? `${hits} de ${ART.length} peças correspondem. Órbita pausada enquanto você procura.`
     : 'A órbita pausa enquanto você busca ou aponta para o anel. Toque numa peça para ver de onde ela veio.';
 }
 $('#q').addEventListener('input', e => { query = e.target.value; applyFilter(); });
@@ -836,7 +873,7 @@ stage.addEventListener('pointerleave', () => applyFilter());
 
 ring.addEventListener('click', e => {
   const b = e.target.closest('.node__btn'); if(!b) return;
-  const a = OS.artifacts[+b.parentElement.dataset.i];
+  const a = ART[+b.parentElement.dataset.i];
   openSheet({
     title: a.t,
     body: `<div class="meta">
@@ -844,9 +881,13 @@ ring.addEventListener('click', e => {
         <span class="chip chip--muted"><i class="dot"></i>${a.c}</span>
         <span class="chip chip--muted"><i class="dot"></i>${a.d}</span>
       </div>
-      <h4>Caminho no workspace</h4>
-      <div class="code">~/robo/artefatos/${a.d.replace(' ','-')}/${a.t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}</div>
-      <p>O anel é só um índice visual do que já existe em disco. Aponte esta lista para a saída real do seu workspace e cada peça abre o arquivo — é o mesmo princípio dos arquivos roteadores: o agente encontra em um salto, você encontra em um clique.</p>`
+      ${a.url
+        ? `<h4>Abrir</h4>
+           <p><a class="btn btn--accent" href="${esc(a.url)}" target="_blank" rel="noopener">Abrir no Google Drive</a></p>
+           <p style="font-size:12.5px">Peça real do seu Drive, lida ao vivo com as suas credenciais quando você abre esta página.</p>`
+        : `<h4>Caminho no workspace</h4>
+           <div class="code">~/robo/artefatos/${esc(a.d.replace(' ','-'))}/${esc(a.t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))}</div>
+           <p>Peça de exemplo: o Google Drive não respondeu nesta sessão. Com o conector ligado, cada nó do anel abre o arquivo de verdade.</p>`}`
   });
 });
 
@@ -1002,23 +1043,253 @@ document.addEventListener('click', e => {
   const t = e.target.closest('[data-sheet]'); if(!t) return;
   const f = SHEETS[t.dataset.sheet]; if(f) openSheet(f());
 });
-$('#apps').addEventListener('click', e => {
-  const b = e.target.closest('[data-app]'); if(!b) return;
-  say(b.dataset.app + ' — conecte este item ao app real');
+$('#flags').addEventListener('click', e => {
+  const b = e.target.closest('[data-url]');
+  if(b) window.open(b.dataset.url, '_blank', 'noopener');
+  else say('Conecte o Gmail para abrir a conversa');
 });
-$('#flags').addEventListener('click', () => say('Ligue a caixa de entrada ao conector de e-mail'));
 
 /* ---------------- rodapé ARMS + relógio vivo ---------------- */
-$('#armsA').textContent = OS.microApps.length;
+$('#armsA').textContent = OS.connectorCount;
 $('#armsR').textContent = OS.routines.length;
 $('#armsM').textContent = OS.memoryRouters;
-$('#armsS').textContent = 27;
-$('#rtCount').textContent = OS.routines.length;
+$('#rtNote').textContent = OS.routinesNote;
+$('#armsS').textContent = OS.skillCount;
+{
+  const n = OS.routines.filter(r => r.enabled).length;
+  $('#rtCount').innerHTML = `<b class="num">${n}</b> ${n === 1 ? 'rotina ativa' : 'rotinas ativas'}`;
+}
 $('#syncAt').textContent = hm(OS.timezone);
 
-tickClock(); renderAgenda(); renderRoutines(); applyFilter();
+tickClock(); renderAgenda(); renderRoutines(); renderRing();
 setInterval(tickClock, 1000);
 setInterval(() => { renderAgenda(); renderRoutines(); }, 30000);
+/* =====================================================================
+   CAMADA AO VIVO — conectores do claude.ai via a capability `mcp`
+   Aberta como Artifact, a página lê Calendar, Gmail e Drive com as
+   credenciais de quem está vendo. Aberta como arquivo local, cai no
+   conteúdo de exemplo do objeto OS acima e diz isso na cara.
+   ===================================================================== */
+(function live(){
+  const SEC = {
+    cal:   { node:'#liveCal',   want:['Google Calendar'],  tool:'list_events',        alive:false },
+    mail:  { node:'#liveMail',  want:['Gmail'],            tool:'search_threads',     alive:false },
+    drive: { node:'#liveDrive', want:['Google Drive'],     tool:'list_recent_files',  alive:false }
+  };
+  const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const CFG = 'https://claude.ai/customize/connectors';
+
+  function status(key, kind, text, link){
+    const sec = SEC[key], n = $(sec.node); if(!n) return;
+    const seeded = kind !== 'live' && !sec.gotData;
+    n.dataset.k = kind;
+    n.innerHTML = `<i class="dot"></i><span>${esc(text + (seeded ? ' · números de exemplo' : ''))}</span>` +
+      (link ? ` <a href="${CFG}" target="_blank" rel="noopener">${esc(link)}</a>` : '');
+  }
+  const stamp = res => {
+    const t = res && res.cache ? res.cache.storedAt : Date.now();
+    return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:OS.timezone}).format(new Date(t));
+  };
+
+  /* cada código de erro tem uma correção diferente — nunca um banner só */
+  function errInfo(err, label){
+    switch(err && err.code){
+      case 'needs_reauth':        return ['err', `Reconecte ${label}`, 'abrir conectores', true];
+      case 'server_not_connected':return ['off', `Adicione ${label}`, 'abrir conectores', true];
+      case 'selection_required':  return ['off', `Escolha qual ${label} usar`, null, true];
+      case 'server_not_found':    return ['off', `${label} não existe mais`, null, true];
+      case 'blocked_by_policy':   return ['err', `${label} bloqueado por política da organização`, null, true];
+      case 'approval_required':   return ['err', `${label} exige aprovação por chamada`, null, true];
+      case 'not_in_manifest':     return ['off', 'Chamada fora do escopo consentido', null, true];
+      case 'server_unavailable':  return ['stale', `${label} fora do ar — último resultado mantido`, null, false];
+      case 'rate_limited':        return ['stale', 'Muitas chamadas — aguardando', null, false];
+      case 'tool_error':          return ['err', `${label}: ${err.message || 'erro'}`, null, false];
+      case 'not_granted':
+      case 'capability_disabled':
+      case 'capability_removed':  return ['off', 'Sem dados ao vivo nesta visualização', null, false];
+      default:                    return ['stale', `${label} falhou — último resultado mantido`, null, false];
+    }
+  }
+  function fail(key, err, label, retract){
+    const [kind, text, link, drop] = errInfo(err, label);
+    if(drop){ retract(); SEC[key].gotData = false; }
+    status(key, kind, text, link);
+  }
+
+  /* ---------- transformações: payload do conector → forma do painel ---------- */
+  const inTz = (d, o) => new Intl.DateTimeFormat('pt-BR', Object.assign({timeZone:OS.timezone}, o)).format(d);
+  const hhmm = d => inTz(d, {hour:'2-digit',minute:'2-digit',hour12:false});
+
+  function toAgenda(payload){
+    const evs = (payload && payload.events) || [];
+    const tone = { FOCUS_TIME:'pessoal', OUT_OF_OFFICE:'pessoal', FROM_GMAIL:'interno' };
+    return evs.map(e => {
+      const sIso = e.start && e.start.dateTime, eIso = e.end && e.end.dateTime;
+      const allDay = !sIso;
+      const st = sIso ? new Date(sIso) : null, en = eIso ? new Date(eIso) : null;
+      const meta = [e.location && String(e.location).trim(), allDay ? 'dia inteiro' : null,
+                    e.status === 'cancelled' ? 'cancelado' : null].filter(Boolean).join(' · ');
+      return {
+        allDay,
+        at: allDay ? '00:00' : hhmm(st),
+        dur: (st && en) ? Math.max(15, Math.round((en - st) / 60000)) : 60,
+        name: e.summary || '(sem título)',
+        meta: meta || 'evento',
+        kind: tone[e.eventType] || 'cliente'
+      };
+    }).sort((a,b) => minutes(a.at) - minutes(b.at));
+  }
+
+  function senderDomain(from){
+    const m = String(from || '').match(/<([^>]+)>/);
+    const addr = m ? m[1] : String(from || '');
+    const at = addr.lastIndexOf('@');
+    return at > -1 ? addr.slice(at + 1).replace(/[>\s]/g,'').toLowerCase() : 'desconhecido';
+  }
+  const TONES = ['var(--ember)','var(--amber)','var(--cyan)','var(--violet)','var(--ink-3)'];
+  function toMail(list, flagged){
+    const threads = (list && list.threads) || [];
+    const tally = {};
+    threads.forEach(t => {
+      const msgs = t.messages || [];
+      const d = senderDomain(msgs.length ? msgs[msgs.length - 1].sender : '');
+      tally[d] = (tally[d] || 0) + 1;
+    });
+    const top = Object.entries(tally).sort((a,b) => b[1] - a[1]);
+    const head = top.slice(0, 4), rest = top.slice(4).reduce((a,b) => a + b[1], 0);
+    const mix = head.map(([d,n], i) => ({ label:d.replace(/^(www|mail|email)\./,''), n, color:TONES[i] }));
+    if(rest) mix.push({ label:'outros', n:rest, color:TONES[4] });
+
+    const fl = ((flagged && flagged.threads) || []).slice(0, 4).map(t => {
+      const msgs = t.messages || [], last = msgs[msgs.length - 1] || {};
+      const hrs = last.date ? Math.max(0, Math.round((Date.now() - new Date(last.date)) / 36e5)) : null;
+      return {
+        subject: last.subject || '(sem assunto)',
+        age: hrs == null ? '' : (hrs < 24 ? hrs + 'h' : Math.round(hrs / 24) + 'd'),
+        url: 'https://mail.google.com/mail/u/0/#inbox/' + (t.id || '')
+      };
+    });
+    return { total: threads.length, mix: mix.length ? mix : [{label:'vazio',n:1,color:'var(--ink-3)'}], flagged: fl };
+  }
+
+  const MIME = [
+    [/spreadsheet|excel|\bcsv\b/, 'chart',   'planilha'],
+    [/presentation|powerpoint/,   'deck',    'apresentação'],
+    [/\.vid$|^video\//,           'video',   'vídeo'],
+    [/^image\/|drawing/,          'image',   'imagem'],
+    [/form|\.site/,               'diagram', 'formulário'],
+    [/zip|script|json|xml|\.folder$/, 'code','arquivo'],
+    [/pdf/,                       'doc',     'pdf'],
+    [/document|\btext\b/,         'doc',     'documento']
+  ];
+  function classify(mime){
+    for(const [re, k, label] of MIME) if(re.test(String(mime || ''))) return [k, label];
+    return ['doc', 'arquivo'];
+  }
+  function toArtifacts(payload){
+    const files = (payload && payload.files) || [];
+    return files.map(f => {
+      const [k, label] = classify(f.mimeType);
+      const when = f.modifiedTime ? new Date(f.modifiedTime) : null;
+      return {
+        t: f.title || '(sem título)',
+        k,
+        d: when ? inTz(when, {day:'2-digit',month:'short'}).replace('.','') : '—',
+        c: (f.sharedWithMeTime ? 'compartilhado' : 'meu Drive') + ' · ' + label,
+        url: f.viewUrl
+      };
+    });
+  }
+
+  /* ---------- ligação ---------- */
+  const seedAgenda = OS.agenda, seedMail = OS.email, seedArt = OS.artifacts;
+  const offline = why => {
+    ['cal','mail','drive'].forEach(k => status(k, 'off', why));
+  };
+
+  (async () => {
+    const mcp = await (window.claude && window.claude.use ? window.claude.use('mcp') : Promise.resolve(null));
+    if(!mcp){ offline('abra como Artifact para ler seus dados'); return; }
+
+    let servers = [];
+    try { servers = (await mcp.listTools()).servers || []; }
+    catch(e){ offline('não foi possível listar seus conectores'); return; }
+
+    Object.entries(SEC).forEach(([key, sec]) => {
+      const found = servers.find(sv => sec.want.some(w => norm(w) === norm(sv.server)));
+      sec.server = found ? found.server : null;
+      sec.label = sec.want[0];
+      if(!found){ status(key, 'off', `Adicione ${sec.label}`, 'abrir conectores'); return; }
+      if(found.authStatus === 'needs_reauth'){ status(key, 'err', `Reconecte ${sec.label}`, 'abrir conectores'); return; }
+      if(!(found.tools || []).some(t => t.name === sec.tool)){
+        status(key, 'off', `${sec.label} não expõe ${sec.tool}`); return;
+      }
+      sec.alive = true;
+      status(key, 'off', 'buscando…');
+    });
+
+    const watch = (key, input, onData, opts) => {
+      const sec = SEC[key]; if(!sec.alive) return;
+      try {
+        mcp.watchTool(sec.server, sec.tool, input, ev => {
+          if(ev.type === 'data') onData(ev.result);
+          else fail(key, ev.error, sec.label, opts.retract);
+        }, { cache:{ staleTime: 60000 }, refetchInterval: opts.every });
+      } catch(e){ status(key, 'off', `${sec.label} indisponível`); }
+    };
+
+    /* — agenda — */
+    let calStop = null, calDay = null;
+    function watchDay(){
+      const p = partsIn(OS.timezone), day = `${p.year}-${p.month}-${p.day}`;
+      if(day === calDay) return;
+      calDay = day;
+      if(calStop) calStop();
+      const sec = SEC.cal; if(!sec.alive) return;
+      try {
+        calStop = mcp.watchTool(sec.server, sec.tool, {
+          startTime: `${day}T00:00:00`, endTime: `${day}T23:59:59`,
+          timeZone: OS.timezone, orderBy: 'startTime', pageSize: 12
+        }, ev => {
+          if(ev.type === 'data'){
+            SEC.cal.gotData = true;
+            renderAgenda(toAgenda(ev.result.payload));
+            status('cal', ev.result.cache ? 'stale' : 'live', `Google Calendar · ${stamp(ev.result)}`);
+          } else fail('cal', ev.error, 'Google Calendar', () => renderAgenda(seedAgenda));
+        }, { cache:{ staleTime: 60000 }, refetchInterval: 300000 });
+      } catch(e){ status('cal', 'off', 'Google Calendar indisponível'); }
+    }
+    watchDay();
+    setInterval(watchDay, 60000);
+
+    /* — caixa de entrada: uma leitura para o volume, outra para o que pede atenção — */
+    let inbox = null, flags = null;
+    const paintMail = res => {
+      if(!inbox) return;
+      SEC.mail.gotData = true;
+      renderMail(toMail(inbox, flags));
+      status('mail', res && res.cache ? 'stale' : 'live', `Gmail · ${stamp(res)}`);
+    };
+    watch('mail', { query:'in:inbox newer_than:1d', pageSize:50, view:'THREAD_VIEW_MINIMAL' },
+      res => { inbox = res.payload; paintMail(res); },
+      { every: 120000, retract: () => renderMail(seedMail) });
+    watch('mail', { query:'in:inbox is:unread is:important', pageSize:5, view:'THREAD_VIEW_MINIMAL' },
+      res => { flags = res.payload; paintMail(res); },
+      { every: 120000, retract: () => renderMail(seedMail) });
+
+    /* — anel — */
+    watch('drive', { pageSize:26, excludeContentSnippets:true, orderBy:'recency' },
+      res => {
+        const art = toArtifacts(res.payload);
+        if(art.length){ SEC.drive.gotData = true; renderRing(art); }
+        status('drive', res.cache ? 'stale' : 'live', `Google Drive · ${stamp(res)}`);
+      },
+      { every: 300000, retract: () => renderRing(seedArt) });
+
+    $('#syncAt').textContent = 'ao vivo';
+  })();
+})();
+
 </script>
 </body>
 </html>

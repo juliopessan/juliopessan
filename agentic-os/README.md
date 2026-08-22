@@ -21,33 +21,52 @@ workspace agêntico:
 Mais o **anel de artefatos**: um índice visual e buscável de tudo que o agente já
 produziu, porque achar de novo o que foi gerado há três semanas é o gargalo real.
 
-## Como funciona
+## Dados ao vivo
 
-Todo o conteúdo vem do objeto `OS`, no topo do `<script>`. Não há backend nem
-chamada de rede: o painel é uma casca de apresentação sobre dados que você fornece.
+Publicado como Artifact no claude.ai, o painel declara a capability `mcp` e lê os
+conectores **com as credenciais de quem está vendo a página** — nenhum token passa
+pelo código, nada é assado no arquivo:
+
+| Painel | Conector | Ferramenta |
+|---|---|---|
+| Agenda | Google Calendar | `list_events` (janela do dia, refaz a cada 5 min) |
+| Caixa de entrada | Gmail | `search_threads` — uma leitura de volume, outra do que pede atenção |
+| Anel de artefatos | Google Drive | `list_recent_files` (26 peças, por recência) |
+
+Cada nó do anel abre o arquivo real no Drive. A mistura da caixa de entrada é
+calculada por domínio de remetente: quem mais te escreveu nas últimas 24 h.
+
+**Fora do claude.ai** — abrindo `index.html` direto do disco — não existe
+`window.claude`, então o painel cai no conteúdo de exemplo do objeto `OS` e diz
+isso no rodapé de cada seção. Nenhum número fictício jamais aparece sem o selo
+`números de exemplo`.
+
+**Falhas são tratadas uma a uma**, nunca num aviso genérico: conector ausente
+("Adicione o Gmail"), credencial expirada ("Reconecte"), bloqueio por política,
+upstream fora do ar (mantém o último resultado bom e marca como defasado). Uma
+seção que falha não derruba as outras.
+
+**Privacidade:** uma página que declara `mcp` não pode ser compartilhada
+publicamente — é a regra da plataforma, e ela existe justamente porque a página
+alcança dados conectados.
+
+## O que ainda é estático
+
+- **Rotinas** — snapshot real das suas Routines. Não há conector de Routines no
+  claude.ai, então a lista não se atualiza sozinha; o rodapé do painel avisa.
+- **Deck de skills** — suas skills reais, com modelo e esforço por execução.
+- **Segundo Cérebro** — mapa dos departamentos que roteiam as skills.
+- **Micro apps** — atalhos para Artifacts, Drive e seus repositórios.
+
+Tudo vem do objeto `OS`, no topo do `<script>`:
 
 ```js
 const OS = {
   timezone: 'America/Sao_Paulo',
-  microApps: [...],
-  agenda:    [...],
-  email:     {...},
-  skills:    [...],
-  routines:  [...],
-  brain:     {...},   // arquivos roteadores por departamento
-  artifacts: [...]    // o anel
+  microApps: [...], skills: [...], routines: [...], brain: {...},
+  agenda: [...], email: {...}, artifacts: [...]   // usados só como fallback
 };
 ```
-
-Trocar os valores já entrega um painel seu. Para dados vivos, gere esse bloco:
-
-```bash
-claude -p "Leia ~/workspace e escreva agentic-os/os-data.js exportando o objeto OS
-no formato do index.html: artefatos dos últimos 60 dias, rotinas do crontab e
-skills de .claude/skills." --model claude-opus-5
-```
-
-Depois troque o bloco embutido por `<script src="os-data.js"></script>`.
 
 ## Disparo headless de skills
 
@@ -75,6 +94,8 @@ só o handler de `data-run`.
   Agenda e rotinas recalculam estado a cada 30 s a partir da hora local do fuso.
 - **Tema** — escuro por decisão, não por omissão: é um console. Todas as cores
   saem de tokens em `:root` e o `body` pinta o próprio fundo.
+- **Dados de terceiros** — todo texto vindo de conector passa por `esc()` antes de
+  entrar no DOM. Assunto de e-mail e nome de arquivo são conteúdo não confiável.
 - **Atalhos** — `/` foca a busca, `Esc` fecha o painel de detalhe.
 
 ## Créditos
