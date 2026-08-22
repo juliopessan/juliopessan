@@ -11,6 +11,48 @@ Plataforma SaaS para WhatsApp Business com painel web de administração, suport
 - **Transferência humana** — detecta keywords e aciona escalação
 - **Histórico de conversa** — mantém contexto dos últimos 20 turnos por cliente
 
+## Status no Órbita OS
+
+O bot publica um resumo operacional num arquivo JSON do Google Drive, e o painel
+[Órbita OS](../agentic-os/) lê esse arquivo pelo conector do Google Drive. O Drive
+é só o carteiro — nenhuma porta nova é aberta neste servidor.
+
+```
+webhook da Meta → bot conta e enfileira → publica orbita-whatsapp.json
+   → Órbita lê pelo conector do Drive → painel WhatsApp
+```
+
+### O que é publicado
+
+Contrato `orbita.whatsapp/1`: conversas, mensagens recebidas/enviadas, respostas
+da IA e erros nas últimas 24 h; volume por empresa; e a fila de atendimento humano.
+
+**O número do cliente nunca sai deste servidor.** O snapshot leva apenas os quatro
+últimos dígitos (`•••• 4321`) e um id opaco (SHA-1 truncado) que permite dar baixa
+na fila sem nunca expor o telefone. A última mensagem vai cortada em 120 caracteres.
+
+### Ligar a publicação
+
+1. Crie uma conta de serviço no Google Cloud e baixe o JSON da chave.
+2. Compartilhe o arquivo `orbita-whatsapp.json` do seu Drive como **Editor** com o
+   e-mail da conta de serviço.
+3. No `.env`:
+
+```bash
+GOOGLE_SERVICE_ACCOUNT_FILE=/caminho/service-account.json
+ORBITA_DRIVE_FILE_ID=<id do arquivo, está na URL do Drive>
+ORBITA_PUBLISH_SECONDS=120
+```
+
+Sem essas variáveis o publicador fica desligado e o bot roda normalmente.
+
+### Novos endpoints
+
+| Rota | O que faz |
+|---|---|
+| `GET /stats` | O mesmo objeto publicado no Drive, servido localmente |
+| `POST /admin/handoff/{id}/resolve` | Tira uma conversa da fila. Exige sessão de admin |
+
 ## Stack
 
 | Camada | Tecnologia |

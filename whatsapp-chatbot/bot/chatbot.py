@@ -3,6 +3,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from anthropic import Anthropic
 from config.settings import ANTHROPIC_API_KEY
+from bot import stats
 
 client = Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -132,6 +133,7 @@ def generate_reply(company: dict, customer_phone: str, message: str) -> tuple[st
     history = _get_history(company_id, customer_phone)
 
     ai_config = company.get("ai", {})
+    stats.record_ai_reply(company, customer_phone)
     response = client.messages.create(
         model=ai_config.get("model", "claude-sonnet-4-6"),
         max_tokens=ai_config.get("max_tokens", 500),

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Query
@@ -5,7 +6,10 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 
 from config.settings import WHATSAPP_VERIFY_TOKEN, HOST, PORT, load_company_by_phone
 from integrations.whatsapp import extract_message, send_message
+from integrations import drive_status
 from bot.chatbot import generate_reply, get_greeting
+from bot import stats
+from admin.auth import verify_session
 from admin.panel import router as admin_router
 
 logging.basicConfig(
@@ -19,12 +23,24 @@ logging.basicConfig(
 log = logging.getLogger("whatsapp-chatbot")
 
 GREETED: set[str] = set()
+VERSION = "2.1.0"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("WhatsApp Chatbot iniciado. Acesse /admin para gerenciar empresas.")
+    task = None
+    if drive_status.is_configured():
+        task = asyncio.create_task(drive_status.publisher_loop(lambda: stats.snapshot(VERSION)))
+    else:
+        log.info("Publicador do Drive desligado — defina GOOGLE_SERVICE_ACCOUNT_FILE e ORBITA_DRIVE_FILE_ID.")
     yield
+    if task:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
     log.info("Servidor encerrado.")
 
 
@@ -64,6 +80,7 @@ async def receive_message(request: Request):
 
     company_id = company.get("company_id")
     log.info("[%s] Mensagem de %s: %s", company_id, customer_phone, message_text)
+    stats.record_inbound(company, customer_phone)
 
     greeting_key = f"{company_id}:{customer_phone}"
     if greeting_key not in GREETED:
@@ -71,6 +88,7 @@ async def receive_message(request: Request):
         if not message_text:
             greeting = get_greeting(company)
             await send_message(phone_number_id, customer_phone, greeting)
+            stats.record_outbound(company, customer_phone)
             return {"status": "greeting_sent"}
 
     if not message_text:
@@ -78,12 +96,21 @@ async def receive_message(request: Request):
             phone_number_id, customer_phone,
             "Recebi sua mensagem! No momento só consigo processar texto. Por favor, envie uma mensagem escrita. 😊",
         )
+        stats.record_outbound(company, customer_phone)
         return {"status": "non_text_handled"}
 
-    reply, needs_handoff = generate_reply(company, customer_phone, message_text)
+    try:
+        reply, needs_handoff = generate_reply(company, customer_phone, message_text)
+    except Exception as exc:
+        log.exception("[%s] Falha ao gerar resposta", company_id)
+        stats.record_error(company, exc)
+        raise
+
     await send_message(phone_number_id, customer_phone, reply)
+    stats.record_outbound(company, customer_phone)
 
     if needs_handoff:
+        stats.open_handoff(company, customer_phone, message_text)
         log.info("[%s] Transferência humana solicitada por %s", company_id, customer_phone)
         escalation = company.get("escalation", {})
         if escalation.get("enabled"):
@@ -93,9 +120,27 @@ async def receive_message(request: Request):
     return {"status": "ok"}
 
 
+@app.get("/stats")
+async def get_stats():
+    """Contrato orbita.whatsapp/1 — o mesmo objeto publicado no Drive."""
+    return stats.snapshot(VERSION)
+
+
+@app.post("/admin/handoff/{handoff_id}/resolve")
+async def resolve_handoff(handoff_id: str, request: Request):
+    """Tira uma conversa da fila de atendimento humano. Exige sessão de admin."""
+    if not verify_session(request):
+        raise HTTPException(status_code=401, detail="Não autenticado.")
+    if not stats.resolve_handoff_by_id(handoff_id):
+        raise HTTPException(status_code=404, detail="Transferência não encontrada.")
+    if drive_status.is_configured():
+        await drive_status.publish(stats.snapshot(VERSION))
+    return {"status": "resolved", "id": handoff_id}
+
+
 @app.get("/health")
 async def health():
-    return {"status": "online", "service": "WhatsApp Chatbot SaaS", "version": "2.0.0"}
+    return {"status": "online", "service": "WhatsApp Chatbot SaaS", "version": VERSION}
 
 
 if __name__ == "__main__":

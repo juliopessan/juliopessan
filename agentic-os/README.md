@@ -32,6 +32,14 @@ pelo código, nada é assado no arquivo:
 | Agenda | Google Calendar | `list_events` (janela do dia, refaz a cada 5 min) |
 | Caixa de entrada | Gmail | `search_threads` — uma leitura de volume, outra do que pede atenção |
 | Anel de artefatos | Google Drive | `list_recent_files` (26 peças, por recência) |
+| WhatsApp | Google Drive | `search_files` + `download_file_content` na caixa postal |
+
+O painel **WhatsApp** é um caso à parte: não existe conector de WhatsApp no
+claude.ai, e a política de conteúdo do Artifact impede a página de chamar um
+servidor próprio. Então o [whatsapp-chatbot](../whatsapp-chatbot/) publica um JSON
+de status num arquivo do Drive (`orbita-whatsapp.json`) e o painel lê esse arquivo
+— o Drive vira o carteiro. Mostra conversas das últimas 24 h, volume por empresa e
+a fila de atendimento humano, com o telefone do cliente mascarado ainda na origem.
 
 Cada nó do anel abre o arquivo real no Drive. A mistura da caixa de entrada é
 calculada por domínio de remetente: quem mais te escreveu nas últimas 24 h.

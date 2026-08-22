@@ -230,6 +230,28 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
 .mix__key span{display:inline-flex;align-items:center;gap:5px;font:500 10px/1 var(--mono);letter-spacing:.04em;color:var(--ink-3)}
 .mix__key b{color:var(--ink-2)}
 
+/* ---------- whatsapp ---------- */
+.wa__top{display:flex;align-items:center;gap:14px}
+.wa__big{display:flex;align-items:flex-end;gap:10px;flex:none}
+.wa__n{font:600 34px/.9 var(--mono);color:var(--cyan);font-variant-numeric:tabular-nums}
+.wa__l{font:400 9.5px/1.35 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding-bottom:2px}
+.wa__side{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;border-left:1px solid var(--line-soft);padding-left:12px}
+.wa__side li{display:flex;gap:6px;align-items:baseline;font:400 10.5px/1.3 var(--mono);color:var(--ink-3)}
+.wa__side b{color:var(--ink-2);font-weight:500;font-variant-numeric:tabular-nums;min-width:2ch;text-align:right}
+.queue{display:flex;flex-direction:column}
+.q{display:flex;align-items:flex-start;gap:9px;padding:9px 0;width:100%;text-align:left}
+.queue li+li .q{border-top:1px solid var(--line-soft)}
+.q__w{font:500 10px/1.4 var(--mono);flex:none;min-width:52px;font-variant-numeric:tabular-nums;color:var(--k,var(--ink-3))}
+.q__b{flex:1;min-width:0;display:block}
+.q__c{display:block;font-size:12.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q__m{display:block;font:400 11px/1.4 var(--mono);color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q__co{font:400 9.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line);border-radius:4px;padding:4px 5px;flex:none;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wa__cos{display:flex;flex-direction:column;gap:6px}
+.wa__cos li{display:grid;grid-template-columns:1fr 46px;gap:8px;align-items:center;font-size:11.5px}
+.wa__cos span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.wa__cos i{display:block;height:5px;border-radius:3px;background:var(--cyan);min-width:3px}
+.wa__cos b{font:500 10px/1 var(--mono);color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+
 /* ---------- skills ---------- */
 .deck{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (max-width:520px){.deck{grid-template-columns:1fr}}
@@ -427,6 +449,30 @@ select:hover{border-color:var(--ink-3);color:var(--ink)}
           <div class="mix__key" id="mixKey"></div>
         </div>
         <p class="foot" id="liveMail"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-wa">
+        <div class="panel__head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.5 11.6a8.4 8.4 0 0 1-12.3 7.4L3.5 20.5l1.6-4.6a8.4 8.4 0 1 1 15.4-4.3z"/><path d="M8.9 8.4c.6-.1.8.2 1 .6l.5 1.2c.1.3 0 .5-.2.7l-.4.4c-.2.2-.2.4-.1.6a5.6 5.6 0 0 0 2.5 2.4c.2.1.5.1.6-.1l.5-.5c.2-.2.4-.2.6-.1l1.3.6c.4.2.6.4.5.9-.1.8-.9 1.4-1.8 1.4-2.7-.2-5.6-3.1-5.8-5.8 0-.9.5-1.7 1.3-1.8z"/></svg>
+          <h2 class="eyebrow" id="h-wa">WhatsApp</h2>
+          <div class="spacer"></div>
+          <button class="btn btn--icon" data-sheet="whats" aria-label="Como o WhatsApp chega aqui">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.6"/></svg>
+          </button>
+        </div>
+        <div class="wa__top">
+          <div class="wa__big">
+            <span class="wa__n num" id="waConv">0</span>
+            <span class="wa__l">conversas<br>últimas 24h</span>
+          </div>
+          <ul class="wa__side" id="waSide"></ul>
+        </div>
+        <div>
+          <p class="eyebrow" style="margin-bottom:6px">Fila de atendimento humano</p>
+          <ul class="queue" id="waQueue"></ul>
+        </div>
+        <ul class="wa__cos" id="waCos"></ul>
+        <p class="foot" id="liveWa"></p>
       </section>
 
       <section class="panel" aria-labelledby="h-skills">
@@ -627,6 +673,13 @@ const OS = {
     video:  { label:'Vídeo',    color:'var(--ember)' }
   },
 
+  whats: {
+    totals:{ conversations:0, messages_in:0, messages_out:0, ai_replies:0, errors:0 },
+    companies:[], handoff_queue:[],
+    bot:{ status:'aguardando', version:'—', last_error:null }
+  },
+  driveMailbox: 'orbita-whatsapp.json',
+
   memoryRouters: 7,
   skillCount: 20,
   connectorCount: 15
@@ -727,6 +780,46 @@ function renderMail(m){
   $('#mixKey').innerHTML = m.mix.map(x => `<span><i class="dot" style="background:${x.color}"></i>${esc(x.label)} <b class="num">${x.n}</b></span>`).join('');
 }
 renderMail(OS.email);
+
+/* ---------------- whatsapp ---------------- */
+function waWait(min){
+  if(min < 60) return min + ' min';
+  const h = Math.floor(min / 60), m = min % 60;
+  return h + 'h' + (m ? String(m).padStart(2,'0') : '');
+}
+const waTone = min => min >= 60 ? 'var(--crit)' : (min >= 15 ? 'var(--amber)' : 'var(--cyan)');
+
+function renderWhats(w){
+  const t = w.totals || {};
+  $('#waConv').textContent = t.conversations || 0;
+  $('#waSide').innerHTML = [
+    ['recebidas', t.messages_in || 0],
+    ['enviadas',  t.messages_out || 0],
+    ['pela IA',   t.ai_replies || 0],
+    ['erros',     t.errors || 0]
+  ].map(([k,v]) => `<li>${k} <b${k === 'erros' && v ? ' style="color:var(--crit)"' : ''}>${v}</b></li>`).join('');
+
+  const q = w.handoff_queue || [];
+  $('#waQueue').innerHTML = q.length
+    ? q.map(h => `<li><div class="q">
+        <span class="q__w" style="--k:${waTone(h.waiting_minutes || 0)}">${waWait(h.waiting_minutes || 0)}</span>
+        <span class="q__b">
+          <span class="q__c">${esc(h.contact)}</span>
+          <span class="q__m">${esc(h.last_message || '—')}</span>
+        </span>
+        <span class="q__co">${esc(h.company || '')}</span>
+      </div></li>`).join('')
+    : `<li class="void">${(w.bot && w.bot.status === 'online') ? 'Ninguém esperando atendente.' : 'Sem dados do bot ainda.'}</li>`;
+
+  const cos = w.companies || [];
+  const peak = Math.max(1, ...cos.map(c => c.messages || 0));
+  $('#waCos').innerHTML = cos.slice(0, 5).map(c => `<li>
+      <span>${esc(c.name)}</span>
+      <b>${c.messages || 0}</b>
+      <i style="grid-column:1/-1;width:${Math.round((c.messages || 0) / peak * 100)}%"></i>
+    </li>`).join('');
+}
+renderWhats(OS.whats);
 
 /* ---------------- deck de skills ---------------- */
 function cmdFor(s){
@@ -1029,6 +1122,18 @@ usando o design system em refs/brand.html, e salve em
 ~/robo/apps/&lt;nome&gt;/index.html"</div>
       <p style="font-size:12.5px">Depois é só adicionar o app à lista <span class="num">OS.microApps</span> deste painel.</p>`
   }),
+  whats: () => ({
+    title: 'Como o WhatsApp chega aqui',
+    body: `<p>Não existe conector de WhatsApp no claude.ai — nem na sua conta, nem no diretório. E esta página não pode chamar o seu servidor direto: a política de conteúdo do Artifact bloqueia qualquer host externo.</p>
+      <p>Então o <strong>Drive vira o carteiro</strong>. O <span class="num">whatsapp-chatbot</span> escreve um JSON de status num arquivo do seu Drive; o painel lê esse arquivo pelo conector do Google Drive que já está ligado. Nenhuma porta nova é aberta no servidor do bot.</p>
+      <h4>O caminho</h4>
+      <div class="code">webhook da Meta → bot conta e enfileira
+       → publica ${OS.driveMailbox} no Drive (a cada 2 min)
+       → Órbita lê pelo conector → este painel</div>
+      <h4>Privacidade</h4>
+      <p>O número do cliente <strong>nunca sai do servidor</strong>: o snapshot leva só os quatro últimos dígitos e um id opaco para dar baixa na fila. O conteúdo é a última mensagem, cortada em 120 caracteres.</p>
+      <p style="font-size:12.5px">Para ligar: crie uma conta de serviço do Google, compartilhe o arquivo <span class="num">${OS.driveMailbox}</span> como Editor com o e-mail dela e preencha <span class="num">GOOGLE_SERVICE_ACCOUNT_FILE</span> e <span class="num">ORBITA_DRIVE_FILE_ID</span> no .env do bot.</p>`
+  }),
   'skills-help': () => ({
     title: 'Como o deck dispara skills',
     body: `<p>Uma skill é uma SOP versionada: quando você se pega escrevendo o mesmo prompt pela segunda vez, ela vira arquivo. O deck existe para os casos em que abrir uma sessão de chat é atrito puro — limpeza de disco, digest, checagem de pipeline.</p>
@@ -1074,7 +1179,8 @@ setInterval(() => { renderAgenda(); renderRoutines(); }, 30000);
   const SEC = {
     cal:   { node:'#liveCal',   want:['Google Calendar'],  tool:'list_events',        alive:false },
     mail:  { node:'#liveMail',  want:['Gmail'],            tool:'search_threads',     alive:false },
-    drive: { node:'#liveDrive', want:['Google Drive'],     tool:'list_recent_files',  alive:false }
+    drive: { node:'#liveDrive', want:['Google Drive'],     tool:'list_recent_files',  alive:false },
+    wa:    { node:'#liveWa',    want:['Google Drive'],     tool:'search_files',       alive:false }
   };
   const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const CFG = 'https://claude.ai/customize/connectors';
@@ -1201,10 +1307,21 @@ setInterval(() => { renderAgenda(); renderRoutines(); }, 30000);
     });
   }
 
+  /* a caixa postal chega em base64; só aceitamos o schema que o bot promete */
+  function decodeMailbox(payload){
+    try {
+      const b64 = payload && payload.content;
+      if(!b64) return null;
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const data = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+      return String(data.schema || '').startsWith('orbita.whatsapp/') ? data : null;
+    } catch(e){ return null; }
+  }
+
   /* ---------- ligação ---------- */
   const seedAgenda = OS.agenda, seedMail = OS.email, seedArt = OS.artifacts;
   const offline = why => {
-    ['cal','mail','drive'].forEach(k => status(k, 'off', why));
+    Object.keys(SEC).forEach(k => status(k, 'off', why));
   };
 
   (async () => {
@@ -1285,6 +1402,40 @@ setInterval(() => { renderAgenda(); renderRoutines(); }, 30000);
         status('drive', res.cache ? 'stale' : 'live', `Google Drive · ${stamp(res)}`);
       },
       { every: 300000, retract: () => renderRing(seedArt) });
+
+    /* — whatsapp: o Drive é só o carteiro entre o bot e este painel — */
+    const waSeed = () => renderWhats(OS.whats);
+    if(SEC.wa.alive){
+      let waStop = null, waFileId = null;
+      mcp.watchTool(SEC.wa.server, 'search_files', {
+        query: `title = '${OS.driveMailbox}' and owner = 'me'`, pageSize: 1, excludeContentSnippets: true
+      }, ev => {
+        if(ev.type !== 'data'){ fail('wa', ev.error, 'Google Drive', waSeed); return; }
+        const f = ((ev.result.payload || {}).files || [])[0];
+        if(!f){
+          SEC.wa.gotData = false; waSeed(); waFileId = null;
+          if(waStop){ waStop(); waStop = null; }
+          status('wa', 'off', `Crie ${OS.driveMailbox} no seu Drive`);
+          return;
+        }
+        if(f.id === waFileId) return;
+        waFileId = f.id;
+        if(waStop) waStop();
+        waStop = mcp.watchTool(SEC.wa.server, 'download_file_content', { fileId: f.id }, ev2 => {
+          if(ev2.type !== 'data'){ fail('wa', ev2.error, 'Google Drive', waSeed); return; }
+          const data = decodeMailbox(ev2.result.payload);
+          if(!data){
+            SEC.wa.gotData = false; waSeed();
+            status('wa', 'err', 'Caixa postal ilegível — o bot ainda não publicou');
+            return;
+          }
+          SEC.wa.gotData = true;
+          renderWhats(data);
+          const v = (data.bot && data.bot.version) || '—';
+          status('wa', ev2.result.cache ? 'stale' : 'live', `bot ${v} · ${stamp(ev2.result)}`);
+        }, { cache:{ staleTime: 60000 }, refetchInterval: 120000 });
+      }, { cache:{ staleTime: 60000 }, refetchInterval: 300000 });
+    }
 
     $('#syncAt').textContent = 'ao vivo';
   })();
