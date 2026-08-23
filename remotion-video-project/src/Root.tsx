@@ -5,10 +5,37 @@ import { Audiogram } from "./Audiogram/Main";
 import { audiogramSchema } from "./Audiogram/schema";
 import { getSubtitles } from "./helpers/fetch-captions";
 import { FPS } from "./helpers/ms-to-frame";
+import { AzureMigrationFactory } from "./AzureMigrationFactory/Main";
+import { azureMigrationFactorySchema } from "./AzureMigrationFactory/schema";
+import {
+  FPS as AMF_FPS,
+  HEIGHT as AMF_HEIGHT,
+  TOTAL_DURATION_IN_FRAMES,
+  WIDTH as AMF_WIDTH,
+} from "./AzureMigrationFactory/data";
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      <Composition
+        id="AzureMigrationFactory"
+        component={AzureMigrationFactory}
+        width={AMF_WIDTH}
+        height={AMF_HEIGHT}
+        fps={AMF_FPS}
+        durationInFrames={TOTAL_DURATION_IN_FRAMES}
+        schema={azureMigrationFactorySchema}
+        defaultProps={{
+          showDirectorNotes: true,
+          act1VideoUrl: null,
+          act2VideoUrl: null,
+          act3VideoUrl: null,
+          act4VideoUrl: null,
+          act5VideoUrl: null,
+          voAudioUrl: null,
+          musicUrl: null,
+        }}
+      />
       <Composition
         id="Audiogram"
         component={Audiogram}
