@@ -8,6 +8,8 @@
 
 | Project | Description | Stack |
 |---|---|---|
+| 🚩 [FDE-OS](https://github.com/juliopessan/FDE-OS) | **Flagship.** Forward Deployed Engineers OS — 5-phase framework + team of 9 execution-focused AI agents | TypeScript |
+| [praxia](https://github.com/juliopessan/praxia) *(private)* | AI-first operational intelligence platform that discovers repetitive processes and generates executable playbooks with risk-governed automation | Next.js 16, PostgreSQL/Prisma, Playwright, Claude |
 | [MANIFEST](https://github.com/juliopessan/MANIFEST) | Manifest your operations — discovery + execução automática do "manifesto operacional" | TypeScript |
 | [content-machine](https://github.com/juliopessan/content-machine) | AI editorial pipeline that turns a topic into a Medium article (HITS framework) + native LinkedIn post, with self-generated cover images and a learning loop from user edits | Vite, React 19, Tailwind, OpenRouter |
 | [azure-diagrams-plugin](https://github.com/juliopessan/azure-diagrams-plugin) | Claude plugin that turns Mermaid into presentation-ready, editable draw.io Azure architecture diagrams — official Microsoft icons, rule-coded (AZD-xxx) design system, validated via the official draw.io MCP | Claude Skills, draw.io MCP |
