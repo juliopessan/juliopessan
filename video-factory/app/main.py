@@ -1,4 +1,4 @@
-"""API local do Omni Studio (FastAPI) + entrega da interface web."""
+"""API local do Video Factory (FastAPI) + entrega da interface web."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -23,7 +23,7 @@ from .config import (
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
-app = FastAPI(title="Omni Studio", version="1.0.0")
+app = FastAPI(title="Video Factory", version="1.0.0")
 
 
 @app.on_event("startup")

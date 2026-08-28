@@ -11,7 +11,7 @@ import os
 
 from .config import settings
 
-TEXT_MODEL = os.environ.get("OMNI_TEXT_MODEL", "gemini-flash-latest")
+TEXT_MODEL = os.environ.get("VF_TEXT_MODEL", "gemini-flash-latest")
 
 
 class TextGenError(RuntimeError):

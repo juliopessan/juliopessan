@@ -10,8 +10,8 @@ import tempfile
 import time
 from pathlib import Path
 
-os.environ.setdefault("OMNI_PROVIDER", "mock")
-os.environ.setdefault("OMNI_STORAGE_DIR", tempfile.mkdtemp(prefix="omni-smoke-"))
+os.environ.setdefault("VF_PROVIDER", "mock")
+os.environ.setdefault("VF_STORAGE_DIR", tempfile.mkdtemp(prefix="vf-smoke-"))
 
 from fastapi.testclient import TestClient  # noqa: E402
 

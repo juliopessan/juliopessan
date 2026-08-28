@@ -55,7 +55,7 @@ class Settings:
 
     @property
     def db_path(self) -> Path:
-        return self.storage_dir / "studio.db"
+        return self.storage_dir / "factory.db"
 
     @property
     def effective_provider(self) -> str:
@@ -65,16 +65,16 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    storage = Path(os.environ.get("OMNI_STORAGE_DIR", "storage"))
+    storage = Path(os.environ.get("VF_STORAGE_DIR", "storage"))
     if not storage.is_absolute():
         storage = BASE_DIR / storage
     settings = Settings(
         api_key=os.environ.get("GEMINI_API_KEY", "").strip(),
-        provider=os.environ.get("OMNI_PROVIDER", "auto").strip().lower(),
-        model=os.environ.get("OMNI_MODEL", "gemini-omni-1.1-flash").strip(),
+        provider=os.environ.get("VF_PROVIDER", "auto").strip().lower(),
+        model=os.environ.get("VF_MODEL", "gemini-omni-1.1-flash").strip(),
         storage_dir=storage,
-        host=os.environ.get("OMNI_HOST", "127.0.0.1"),
-        port=int(os.environ.get("OMNI_PORT", "8000")),
+        host=os.environ.get("VF_HOST", "127.0.0.1"),
+        port=int(os.environ.get("VF_PORT", "8000")),
     )
     settings.media_dir.mkdir(parents=True, exist_ok=True)
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)

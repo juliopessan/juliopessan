@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sobe o Omni Studio localmente em http://127.0.0.1:8000
+# Sobe o Video Factory localmente em http://127.0.0.1:8000
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -9,4 +9,4 @@ if [ ! -d .venv ]; then
   ./.venv/bin/pip install --quiet -r requirements.txt
 fi
 
-exec ./.venv/bin/python -m uvicorn app.main:app --host "${OMNI_HOST:-127.0.0.1}" --port "${OMNI_PORT:-8000}" --reload
+exec ./.venv/bin/python -m uvicorn app.main:app --host "${VF_HOST:-127.0.0.1}" --port "${VF_PORT:-8000}" --reload

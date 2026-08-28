@@ -22,7 +22,7 @@ from .config import (
 )
 from .providers import MediaInput, ProviderError, VideoRequest, get_provider
 
-EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="omni-job")
+EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="vf-job")
 
 MODES = ("text_to_video", "image_to_video", "interpolate", "reference_to_video", "extend", "upscale")
 UPSCALE_RESOLUTIONS = ("1080p", "4k")

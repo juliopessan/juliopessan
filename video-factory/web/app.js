@@ -1,4 +1,4 @@
-/* Omni Studio — cliente da API local. Sem framework, sem build. */
+/* Video Factory — cliente da API local. Sem framework, sem build. */
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];

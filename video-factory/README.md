@@ -1,4 +1,4 @@
-# Omni Studio
+# Video Factory
 
 Plataforma local de criação de vídeos sobre o **Gemini Omni 1.1 Flash**. Roda inteira na sua
 máquina: FastAPI + SQLite + uma interface sem build step. Os vídeos, uploads e o banco ficam em
@@ -15,7 +15,7 @@ O núcleo é um pipeline de quatro passos:
 ## Como rodar
 
 ```bash
-cd omni-studio
+cd video-factory
 cp .env.example .env          # opcional: cole sua GEMINI_API_KEY
 ./run.sh                      # cria a venv, instala e sobe em http://127.0.0.1:8000
 ```
@@ -102,11 +102,11 @@ client.interactions.create(
 | Variável | Padrão | Para quê |
 |---|---|---|
 | `GEMINI_API_KEY` | — | chave da Gemini API; sem ela o app roda em mock |
-| `OMNI_PROVIDER` | `auto` | `auto`, `gemini` ou `mock` |
-| `OMNI_MODEL` | `gemini-omni-1.1-flash` | modelo de vídeo |
-| `OMNI_TEXT_MODEL` | `gemini-flash-latest` | modelo de texto do roteiro/storyboard |
-| `OMNI_STORAGE_DIR` | `storage` | banco, mídias e uploads |
-| `OMNI_HOST` / `OMNI_PORT` | `127.0.0.1` / `8000` | endereço do servidor |
+| `VF_PROVIDER` | `auto` | `auto`, `gemini` ou `mock` |
+| `VF_MODEL` | `gemini-omni-1.1-flash` | modelo de vídeo |
+| `VF_TEXT_MODEL` | `gemini-flash-latest` | modelo de texto do roteiro/storyboard |
+| `VF_STORAGE_DIR` | `storage` | banco, mídias e uploads |
+| `VF_HOST` / `VF_PORT` | `127.0.0.1` / `8000` | endereço do servidor |
 
 ## Notas
 

@@ -13,14 +13,14 @@ import struct
 import tempfile
 from pathlib import Path
 
-os.environ.setdefault("OMNI_PROVIDER", "mock")
-os.environ.setdefault("OMNI_STORAGE_DIR", tempfile.mkdtemp(prefix="omni-media-"))
+os.environ.setdefault("VF_PROVIDER", "mock")
+os.environ.setdefault("VF_STORAGE_DIR", tempfile.mkdtemp(prefix="vf-media-"))
 
 from app.mediainfo import probe_duration_seconds  # noqa: E402
 from app.providers.base import MediaInput, VideoRequest  # noqa: E402
 from app.providers.gemini import GeminiOmniProvider  # noqa: E402
 
-TMP = Path(tempfile.mkdtemp(prefix="omni-fixtures-"))
+TMP = Path(tempfile.mkdtemp(prefix="vf-fixtures-"))
 failures: list[str] = []
 
 
