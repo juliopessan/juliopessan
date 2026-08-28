@@ -57,7 +57,10 @@ class GeminiOmniProvider:
         elif request.mode == "extend" and not prompt:
             prompt = "Continue the scene."
         elif request.mode == "upscale":
-            prompt = prompt or "Upscale this video, preserving the original scene."
+            prompt = prompt or (
+                "Upscale this video to the requested output resolution. Keep the same scene, "
+                "framing, motion and duration; only increase detail and sharpness."
+            )
         blocks.append({"type": "text", "text": prompt})
         return blocks
 
@@ -69,16 +72,21 @@ class GeminiOmniProvider:
             "duration": f"{request.duration_seconds}s",
             "delivery": "inline",
         }
+        generation_config: dict = {}
+        task = TASK_BY_MODE[request.mode]
+        if task is not None:
+            generation_config["video_config"] = {"task": task}
         body: dict = {
             "model": self.model,
             "input": self.build_input(request),
             "response_format": response_format,
-            "generation_config": {"video_config": {"task": TASK_BY_MODE[request.mode]}},
         }
+        if generation_config:
+            body["generation_config"] = generation_config
         if request.previous_interaction_id:
             body["previous_interaction_id"] = request.previous_interaction_id
         if request.seed is not None:
-            body["generation_config"]["seed"] = request.seed
+            body.setdefault("generation_config", {})["seed"] = request.seed
         return body
 
     # -- execucao --------------------------------------------------------------

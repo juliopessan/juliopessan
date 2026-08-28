@@ -7,13 +7,17 @@ from typing import Literal, Protocol
 Mode = Literal["text_to_video", "image_to_video", "interpolate", "reference_to_video", "extend", "upscale"]
 
 # Mapeia o modo da UI para o `generation_config.video_config.task` da API.
-TASK_BY_MODE: dict[str, str] = {
+# `None` = nao enviar `video_config`: a API entao determina o modo pelo texto e
+# pela midia de entrada. E o caso do upscale, que a documentacao anuncia como
+# recurso mas sem nomear uma task propria — aqui ele e um novo render da mesma
+# interacao (`previous_interaction_id`) pedindo uma resolucao maior.
+TASK_BY_MODE: dict[str, str | None] = {
     "text_to_video": "text_to_video",
     "image_to_video": "image_to_video",
     "interpolate": "image_to_video",
     "reference_to_video": "reference_to_video",
     "extend": "extend",
-    "upscale": "edit",
+    "upscale": None,
 }
 
 

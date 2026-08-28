@@ -25,10 +25,11 @@ um clipe sintético (SVG animado com o prompt). Serve para percorrer o fluxo, te
 encadeamento de cenas e a fila sem gastar cota. Com a chave configurada, o mesmo fluxo chama o
 modelo de verdade.
 
-Teste de fumaça de ponta a ponta (offline, provider mock):
+Testes (offline, provider mock):
 
 ```bash
-python3 tests_smoke.py
+python3 tests_smoke.py     # jornada completa: contexto → render → limites de domínio
+python3 tests_media.py     # leitura de duração de vídeo e corpo enviado à API por modo
 ```
 
 ## O pipeline
@@ -61,7 +62,7 @@ contínua de 10, 20, 30 ou 40 segundos.
 | Extensão de cena | Pipeline e Studio | incrementos de 10s, teto cumulativo de 40s, via `previous_interaction_id` |
 | Primeiro + último frame | Studio (`interpolate`) | duas imagens com papéis `first_frame` / `last_frame` |
 | Imagem → vídeo | Studio e peça 1 do pipeline | frame de referência do contexto |
-| Referências multimodais | Studio (`reference_to_video`) | até 3 referências de vídeo (≤ 3s cada) |
+| Referências multimodais | Studio (`reference_to_video`) | até 3 referências de vídeo, ≤ 3s cada (duração medida no upload) |
 | Rascunho em 360p | Draft room | variações lado a lado, promoção da vencedora para 720p/1080p/4K |
 | Upscale | Studio | 1080p e 4K a partir de um clipe pronto |
 
@@ -74,6 +75,7 @@ app/
   studio.py       validação, fila (ThreadPoolExecutor) e execução das gerações
   pipeline.py     contexto → storytelling → storyboard → render sequencial
   textgen.py      geração de JSON estruturado para roteiro e storyboard
+  mediainfo.py    duração de MP4/MOV/WebM lida do cabeçalho, sem ffmpeg
   providers/
     base.py       contrato VideoRequest / VideoResult
     gemini.py     client.interactions.create + polling até `completed`
@@ -111,4 +113,13 @@ client.interactions.create(
 - O custo aparece em **unidades relativas** (360p = 1/3 de 720p), não em dólares: serve para
   comparar rascunho e render final, não para faturamento.
 - O mock grava SVG animado, não MP4 — a interface detecta o mime type e exibe como imagem.
-- A duração de vídeos de referência (≤ 3s) não é medida localmente; o limite é de quantidade.
+- **Duração de referência.** Todo vídeo enviado tem a duração lida do cabeçalho do arquivo
+  (`app/mediainfo.py`: átomo `mvhd` do MP4/MOV, elemento `Duration` do WebM) e gravada no banco.
+  Referência acima de 3s é recusada com o nome do arquivo e a duração medida. Contêiner que não
+  sabemos ler devolve duração desconhecida e passa sem o limite — melhor do que recusar um
+  arquivo válido por não conseguir medi-lo.
+- **Upscale.** A documentação anuncia 1080p e 4K, mas não nomeia uma task própria para isso.
+  Aqui o upscale é um novo render da mesma interação (`previous_interaction_id`) pedindo a
+  resolução maior, **sem** `video_config.task` — o modelo determina o modo pelo texto e pela
+  mídia de entrada, como o SDK documenta. Se a API passar a expor uma task dedicada, o ajuste
+  é uma linha em `providers/base.py` (`TASK_BY_MODE["upscale"]`).

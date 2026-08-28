@@ -5,8 +5,10 @@ Roda offline no provider mock: `python3 tests_smoke.py`.
 from __future__ import annotations
 
 import os
+import struct
 import tempfile
 import time
+from pathlib import Path
 
 os.environ.setdefault("OMNI_PROVIDER", "mock")
 os.environ.setdefault("OMNI_STORAGE_DIR", tempfile.mkdtemp(prefix="omni-smoke-"))
@@ -17,6 +19,13 @@ from app.main import app  # noqa: E402
 
 client = TestClient(app)
 failures: list[str] = []
+
+
+def mp4_bytes(timescale: int, duration: int) -> bytes:
+    """MP4 minimo com moov>mvhd, so para exercitar a leitura de duracao."""
+    box = lambda kind, payload: struct.pack(">I", len(payload) + 8) + kind + payload  # noqa: E731
+    mvhd = b"\x00\x00\x00\x00" + struct.pack(">IIII", 0, 0, timescale, duration) + b"\x00" * 80
+    return box(b"ftyp", b"isom" + b"\x00" * 8) + box(b"moov", box(b"mvhd", mvhd))
 
 
 def check(label: str, condition: bool, detail: str = "") -> None:
@@ -107,6 +116,40 @@ with client:
         )
     )
     check("rascunhos concluem", bool(done))
+
+    # referencias de video: limite de 3s medido no cabecalho do arquivo
+    fixture = Path(__file__).parent / "tests" / "fixtures" / "sample.webm"
+    with fixture.open("rb") as handle:
+        short_ref = client.post(
+            f"/api/projects/{project['id']}/assets",
+            files={"file": ("sample.webm", handle, "video/webm")},
+            data={"kind": "video"},
+        ).json()
+    check("duracao medida no upload", 2.3 < (short_ref.get("duration_seconds") or 0) < 2.6, str(short_ref))
+    ok_ref = client.post(
+        f"/api/projects/{project['id']}/generations",
+        json={
+            "prompt": "use a referencia",
+            "mode": "reference_to_video",
+            "media": [{"asset_id": short_ref["id"], "kind": "video", "role": "reference"}],
+        },
+    )
+    check("referencia de 2.4s e aceita", ok_ref.status_code == 202, ok_ref.text)
+
+    long_ref = client.post(
+        f"/api/projects/{project['id']}/assets",
+        files={"file": ("longa.mp4", mp4_bytes(600, 4350), "video/mp4")},
+        data={"kind": "video"},
+    ).json()
+    rejected = client.post(
+        f"/api/projects/{project['id']}/generations",
+        json={
+            "prompt": "use a referencia",
+            "mode": "reference_to_video",
+            "media": [{"asset_id": long_ref["id"], "kind": "video", "role": "reference"}],
+        },
+    )
+    check("referencia de 7.25s e recusada", rejected.status_code == 400, rejected.text)
 
     # validacoes de dominio
     bad = client.post(

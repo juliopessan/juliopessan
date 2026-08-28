@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS assets (
     path        TEXT NOT NULL,
     mime_type   TEXT NOT NULL,
     size        INTEGER NOT NULL,
+    duration_seconds REAL,
     created_at  TEXT NOT NULL
 );
 """
@@ -98,6 +99,10 @@ def connect() -> sqlite3.Connection:
 def init_db() -> None:
     conn = connect()
     conn.executescript(SCHEMA)
+    # bancos criados antes da medicao de duracao nao tem a coluna
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(assets)")}
+    if "duration_seconds" not in columns:
+        conn.execute("ALTER TABLE assets ADD COLUMN duration_seconds REAL")
     conn.commit()
 
 

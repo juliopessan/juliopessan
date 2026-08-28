@@ -8,8 +8,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from . import db
+from .mediainfo import probe_duration_seconds
 from .config import (
     ASPECT_RATIOS,
+    MAX_REFERENCE_VIDEO_SECONDS,
     CLIP_SECONDS,
     COST_UNITS_PER_SECOND,
     EXTENSION_SECONDS,
@@ -86,6 +88,7 @@ def save_upload(project_id: str | None, filename: str, content: bytes, kind: str
     asset_id = new_id("ast")
     path = settings.uploads_dir / f"{asset_id}{suffix}"
     path.write_bytes(content)
+    duration = probe_duration_seconds(path) if kind == "video" else None
     asset = {
         "id": asset_id,
         "project_id": project_id,
@@ -94,6 +97,7 @@ def save_upload(project_id: str | None, filename: str, content: bytes, kind: str
         "path": str(path),
         "mime_type": mimetypes.guess_type(filename)[0] or ("image/png" if kind == "image" else "video/mp4"),
         "size": len(content),
+        "duration_seconds": round(duration, 3) if duration else None,
         "created_at": db.now(),
     }
     db.insert("assets", asset)
@@ -147,6 +151,23 @@ def _validate_common(mode: str, resolution: str, aspect_ratio: str) -> None:
         raise StudioError(f"Aspect ratio invalido: {aspect_ratio}.")
 
 
+def _validate_reference_videos(videos: list[dict]) -> None:
+    """Referencias de video sao limitadas a 3 segundos.
+
+    A duracao vem do cabecalho do arquivo (MP4/MOV/WebM). Contêiner que nao
+    sabemos ler devolve `None`: nesse caso o limite nao e aplicado, para nao
+    recusar um arquivo valido so porque nao conseguimos medi-lo.
+    """
+    for ref in videos:
+        asset = get_asset(ref["asset_id"])
+        duration = asset.get("duration_seconds")
+        if duration and duration > MAX_REFERENCE_VIDEO_SECONDS + 0.05:
+            raise StudioError(
+                f"'{asset['filename']}' tem {duration:.1f}s; referencias de video "
+                f"aceitam ate {MAX_REFERENCE_VIDEO_SECONDS}s."
+            )
+
+
 def _validate_media(mode: str, media_refs: list[dict]) -> None:
     images = [m for m in media_refs if m["kind"] == "image"]
     videos = [m for m in media_refs if m["kind"] == "video"]
@@ -161,6 +182,7 @@ def _validate_media(mode: str, media_refs: list[dict]) -> None:
             raise StudioError("reference_to_video exige ao menos 1 referencia.")
         if len(videos) > MAX_REFERENCE_VIDEOS:
             raise StudioError(f"Maximo de {MAX_REFERENCE_VIDEOS} referencias de video.")
+        _validate_reference_videos(videos)
 
 
 def _parent_for(mode: str, parent_id: str | None) -> dict | None:
