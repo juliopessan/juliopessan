@@ -160,6 +160,19 @@ elenco/figurino, estética base, frame de referência e formato (duração, prop
 to Action — com locução em PT-BR e direção de câmera em inglês, cada um editável. Sem chave de
 texto configurada, o roteiro é montado a partir do template local em vez de falhar.
 
+Dentro dos cinco atos, a locução segue o padrão de script **intro → hook → meat → cta**:
+
+| Beat | Onde | O que precisa fazer |
+|---|---|---|
+| `intro` | primeira frase do Ato 1 | situa quem fala, sobre o quê e onde, em uma linha — sem saudação nem preâmbulo |
+| `hook` | ainda no Ato 1 | a tensão que segura o espectador: o risco concreto de continuar como está |
+| `meat` | Atos 2, 3 e 4 | a substância: custo do jeito atual, mudança de abordagem, valor produzido |
+| `cta` | Ato 5 | uma ação clara e curta |
+
+O beat viaja com o ato: aparece na interface, define o que cada peça do storyboard cobre e entra
+no prompt compilado como bloco `SCRIPT BEAT`, para o modelo saber a intenção daquele trecho — não
+só o que mostrar, mas o que a cena precisa provocar.
+
 **3. Storyboard.** Os atos viram peças de 10s. A primeira abre a cena; as seguintes continuam a
 mesma tomada. Cada peça compila seu prompt no template de produção.
 
