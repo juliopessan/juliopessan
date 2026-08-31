@@ -61,6 +61,129 @@ function showTab(name) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* ----------------------------------------------------------- modal config */
+
+function openConfigModal() {
+  const modal = $("#config-modal");
+  if (!modal) return;
+  const cfg = state.config || {};
+
+  const providerSelect = $("#cfg-provider");
+  if (providerSelect) providerSelect.value = cfg.configured_provider || cfg.provider || "auto";
+
+  const geminiInput = $("#cfg-gemini-key");
+  if (geminiInput) geminiInput.value = "";
+
+  const azEndpoint = $("#cfg-azure-endpoint");
+  if (azEndpoint) azEndpoint.value = cfg.azure_endpoint || "";
+
+  const azKey = $("#cfg-azure-key");
+  if (azKey) azKey.value = "";
+
+  const azDeployment = $("#cfg-azure-deployment");
+  if (azDeployment) azDeployment.value = cfg.azure_deployment || "sora-2";
+
+  const azStyle = $("#cfg-azure-style");
+  if (azStyle) azStyle.value = cfg.azure_api_style || "videos";
+
+  const ffmpegInput = $("#cfg-ffmpeg-path");
+  if (ffmpegInput) ffmpegInput.value = cfg.ffmpeg_path || "";
+
+  const geminiBox = $("#status-gemini-box");
+  const geminiTxt = $("#status-gemini-text");
+  if (geminiBox && geminiTxt) {
+    if (cfg.has_api_key) {
+      geminiBox.className = "status-item connected";
+      geminiTxt.textContent = "Conectada (AI Studio)";
+    } else {
+      geminiBox.className = "status-item disconnected";
+      geminiTxt.textContent = "Não configurada";
+    }
+  }
+
+  const ffmpegBox = $("#status-ffmpeg-box");
+  const ffmpegTxt = $("#status-ffmpeg-text");
+  if (ffmpegBox && ffmpegTxt) {
+    if (cfg.postproduction) {
+      ffmpegBox.className = "status-item connected";
+      const binName = cfg.ffmpeg_path ? cfg.ffmpeg_path.split(/[/\\]/).pop() : "ffmpeg";
+      ffmpegTxt.textContent = `Pronto (${binName})`;
+    } else {
+      ffmpegBox.className = "status-item disconnected";
+      ffmpegTxt.textContent = "Não encontrado";
+    }
+  }
+
+  const providerBox = $("#status-provider-box");
+  const providerTxt = $("#status-provider-text");
+  if (providerBox && providerTxt) {
+    providerBox.className = "status-item active";
+    providerTxt.textContent = `${cfg.provider || "mock"}${
+      cfg.provider === "gemini" ? " (Omni Flash)" : cfg.provider === "azure" ? " (Sora-2)" : " (Offline)"
+    }`;
+  }
+
+  const msg = $("#config-modal-msg");
+  if (msg) {
+    msg.hidden = true;
+    msg.textContent = "";
+  }
+
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeConfigModal() {
+  const modal = $("#config-modal");
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = "";
+}
+
+async function saveConfigForm(event) {
+  event.preventDefault();
+  const btn = $("#config-modal-save");
+  const msg = $("#config-modal-msg");
+  btn.disabled = true;
+  btn.textContent = "Salvando...";
+  msg.hidden = true;
+  try {
+    const payload = {
+      provider: $("#cfg-provider").value,
+      gemini_api_key: $("#cfg-gemini-key").value.trim() || undefined,
+      azure_endpoint: $("#cfg-azure-endpoint").value.trim() || undefined,
+      azure_api_key: $("#cfg-azure-key").value.trim() || undefined,
+      azure_deployment: $("#cfg-azure-deployment").value.trim() || undefined,
+      azure_api_style: $("#cfg-azure-style").value || undefined,
+      ffmpeg: $("#cfg-ffmpeg-path").value.trim() || undefined,
+    };
+    state.config = await api.post("/api/config", payload);
+
+    const chaining = state.config.chaining === "keyframe" ? " · encadeia por keyframe" : "";
+    $("#runtime-badge").textContent =
+      `${state.config.provider === "azure" ? "sora-2 · foundry" : state.config.model} · provider ${
+        state.config.provider
+      }${chaining}` + (state.config.text_available ? ` · texto ${state.config.text_model}` : " · texto local");
+    $("#foot-model").textContent = state.config.has_api_key ? "gemini api conectada" : "modo mock — sem api key";
+
+    msg.textContent = "Configurações salvas e aplicadas!";
+    msg.className = "note success";
+    msg.hidden = false;
+
+    renderPipeline();
+    setTimeout(() => {
+      closeConfigModal();
+    }, 800);
+  } catch (err) {
+    msg.textContent = err.message || "Erro ao salvar configurações.";
+    msg.className = "note error";
+    msg.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Salvar Configurações";
+  }
+}
+
 /* -------------------------------------------------------------- projetos */
 
 async function loadProjects(selectId) {
@@ -150,12 +273,14 @@ function renderConsole() {
     ["04", "render"],
     ["05", "pós"],
   ];
-  let reached = 0;
-  if (pipeline) reached = pipeline.status === "draft" ? 3 : 4;
-  if (state.exports.some((e) => e.status === "completed")) reached = 5;
   const renders = pipeline?.renders || [];
   const completed = renders.filter((r) => r.status === "completed");
   const running = pipeline?.status === "rendering";
+
+  let reached = 0;
+  if (pipeline) reached = pipeline.status === "draft" ? 3 : 4;
+  if (completed.length > 0 && !running) reached = 5;
+  if (state.exports.some((e) => e.status === "completed")) reached = 5;
 
   $("#console-ref").textContent = pipeline ? `${pipeline.id.toUpperCase()} / ${pipeline.status.toUpperCase()}` : "—";
   $("#console-title").textContent = pipeline?.title || "Nenhum filme em produção";
@@ -178,7 +303,11 @@ function renderConsole() {
   const warning = pipeline?.error || pipeline?.story?.warning || pipeline?.storyboard?.warning;
   const note = $("#console-note");
   note.hidden = !warning;
-  if (warning) $("div", note).textContent = warning;
+  if (warning) {
+    $("div", note).textContent = warning;
+    note.style.cursor = "pointer";
+    note.title = "Clique para abrir as configurações de API / Provedor";
+  }
 
   $("#console-owner").textContent = `Provider ${state.config.provider}`;
   $("#console-rule").textContent =
@@ -193,10 +322,14 @@ function renderStory() {
   $("#story-body").hidden = !pipeline;
   if (!pipeline) return;
   const story = pipeline.story;
+  const lang = pipeline.context?.voiceover_language || "pt-BR";
+  const voLabel = lang === "en-US" ? "Locução (EN-US)" : "Locução (PT-BR)";
+
   $("#story-head").innerHTML = `
     <h4>${escapeHtml(story.title || "")}</h4>
     <p>${escapeHtml(story.logline || "")}</p>
-    <span class="pill">${story.source === "model" ? "gerado pelo modelo" : "template local"}</span>`;
+    <span class="pill">${story.source === "model" ? "gerado pelo modelo" : "template local"}</span>
+    <span class="pill">${lang === "en-US" ? "EN-US" : "PT-BR"}</span>`;
   $("#acts").innerHTML = (story.acts || [])
     .map(
       (act, index) => `
@@ -204,7 +337,7 @@ function renderStory() {
         <div class="act-id">Ato ${act.n} · ${escapeHtml(act.timecode || "")}
           <b>${escapeHtml(act.name || "")}</b>${escapeHtml(act.beat || "")}
           <span class="beat">${escapeHtml(act.script_beat || "")}</span></div>
-        <div><span class="label">Locução (PT-BR)</span>
+        <div><span class="label">${voLabel}</span>
           <textarea rows="4" data-field="vo">${escapeHtml(act.vo || "")}</textarea></div>
         <div class="en"><span class="label">Ação e câmera (EN)</span>
           <textarea rows="4" data-field="action_camera">${escapeHtml(act.action_camera || "")}</textarea></div>
@@ -231,6 +364,8 @@ function renderBoard() {
   $("#board-empty").hidden = !!board?.segments?.length;
   $("#board-body").hidden = !board?.segments?.length;
   if (!board?.segments?.length) return;
+  const lang = pipeline.context?.voiceover_language || "pt-BR";
+  const voLabel = lang === "en-US" ? "Locução (EN-US)" : "Locução (PT-BR)";
 
   $("#board-meta").innerHTML = [
     ["Scene context", board.scene_context],
@@ -256,7 +391,7 @@ function renderBoard() {
         </header>
         <div class="body">
           <div class="col">
-            <div><span class="label" style="font:10px/1 var(--mono);letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase">Locução</span>
+            <div><span class="label" style="font:10px/1 var(--mono);letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase">${voLabel}</span>
               <textarea rows="3" data-field="vo">${escapeHtml(segment.vo || "")}</textarea></div>
             <div><span class="label" style="font:10px/1 var(--mono);letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase">Primeiro frame (EN)</span>
               <textarea rows="3" data-field="first_frame">${escapeHtml(segment.first_frame || "")}</textarea></div>
@@ -267,7 +402,20 @@ function renderBoard() {
           </div>
           <div class="col">
             <div class="prompt-block">${highlightPrompt(segment.prompt || "")}</div>
-            <button class="btn-mini" data-copy="${index}">copiar prompt</button>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+              <button class="btn-mini" data-copy="${index}">copiar prompt</button>
+              <button class="btn-mini btn-safety-rephrase" data-rephrase="${index}">🛡️ Suavizar prompt (Safe AI)</button>
+            </div>
+            ${
+              segment.safe_suggestion
+                ? `<div class="note" style="margin-top:8px;font-size:12px;background:#fff8eb;border:1px solid var(--amber);padding:8px 10px">
+                    <b>Sugestão Segura disponível:</b> ${escapeHtml(segment.safe_suggestion.changes_summary || "")}
+                    <div style="margin-top:6px;display:flex;gap:6px">
+                      <button class="btn-mini btn-accept-safe" data-apply-suggestion="${index}">Aplicar sugestão</button>
+                    </div>
+                  </div>`
+                : ""
+            }
           </div>
         </div>
       </article>`
@@ -329,6 +477,32 @@ function renderRender() {
   $("#render-start").disabled = busy;
   $("#render-start").textContent = busy ? "Renderizando…" : "Renderizar filme";
   const finished = completedRenders.at(-1);
+
+  const nextBtn = $("#render-next");
+  if (nextBtn) {
+    nextBtn.style.display = (completedRenders.length > 0 && !busy) ? "inline-block" : "none";
+  }
+
+  // Tratamento e exibição de sugestão de segurança (content_blocked)
+  const safetyBox = $("#render-safety-box");
+  const segments = pipeline.storyboard?.segments || [];
+  const blockedSegmentIdx = segments.findIndex((s) => s.safe_suggestion);
+  const blockedSegment = blockedSegmentIdx >= 0 ? segments[blockedSegmentIdx] : null;
+
+  if (safetyBox) {
+    if (blockedSegment && blockedSegment.safe_suggestion) {
+      safetyBox.hidden = false;
+      const segNum = blockedSegment.index || (blockedSegmentIdx + 1);
+      safetyBox.dataset.segmentIndex = String(segNum);
+      $("#safety-title").textContent = `Peça ${segNum}: Prompt ajustado para conformidade com a política de IA do Google`;
+      $("#safety-preview-prompt").innerHTML = highlightPrompt(blockedSegment.safe_suggestion.safe_prompt || "");
+      $("#safety-changes-summary").textContent =
+        blockedSegment.safe_suggestion.changes_summary || "Substituição de termos sensíveis por linguagem cinematográfica segura.";
+    } else {
+      safetyBox.hidden = true;
+    }
+  }
+
   $("#render-note").textContent =
     pipeline.error ||
     (busy
@@ -701,13 +875,107 @@ function bindEvents() {
     renderPipeline();
   });
   $("#board-next").addEventListener("click", () => $("#step-4").scrollIntoView({ behavior: "smooth" }));
-  $("#segments").addEventListener("click", (event) => {
-    const index = event.target.dataset.copy;
-    if (index === undefined) return;
-    navigator.clipboard?.writeText(state.pipeline.storyboard.segments[Number(index)].prompt || "");
-    event.target.textContent = "copiado";
-    setTimeout(() => (event.target.textContent = "copiar prompt"), 1500);
+  $("#segments").addEventListener("click", async (event) => {
+    const copyIndex = event.target.dataset.copy;
+    if (copyIndex !== undefined) {
+      navigator.clipboard?.writeText(state.pipeline.storyboard.segments[Number(copyIndex)].prompt || "");
+      event.target.textContent = "copiado";
+      setTimeout(() => (event.target.textContent = "copiar prompt"), 1500);
+      return;
+    }
+    const applySugIndex = event.target.dataset.applySuggestion;
+    if (applySugIndex !== undefined) {
+      const idx = Number(applySugIndex);
+      try {
+        state.pipeline = await api.post(`/api/pipelines/${state.pipeline.id}/accept-safe-prompt`, {
+          segment_index: idx + 1,
+          retry_render: false,
+        });
+        renderPipeline();
+      } catch (err) {
+        alert("Erro ao aplicar sugestão: " + err.message);
+      }
+      return;
+    }
+    const rephraseIndex = event.target.dataset.rephrase;
+    if (rephraseIndex !== undefined) {
+      const btn = event.target;
+      const idx = Number(rephraseIndex);
+      btn.disabled = true;
+      btn.textContent = "Suavizando...";
+      try {
+        state.pipeline = await api.post(`/api/pipelines/${state.pipeline.id}/rephrase-segment`, {
+          segment_index: idx + 1,
+          auto_apply: true,
+        });
+        renderPipeline();
+      } catch (err) {
+        alert("Erro ao suavizar prompt: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🛡️ Suavizar prompt (Safe AI)";
+      }
+    }
   });
+
+  $("#safety-accept-btn")?.addEventListener("click", async () => {
+    const safetyBox = $("#render-safety-box");
+    const segmentIndex = Number(safetyBox.dataset.segmentIndex || 1);
+    const btn = $("#safety-accept-btn");
+    btn.disabled = true;
+    btn.textContent = "Aplicando e renderizando...";
+    try {
+      await api.post(`/api/pipelines/${state.pipeline.id}/accept-safe-prompt`, {
+        segment_index: segmentIndex,
+        retry_render: true,
+        resolution: $("#render-resolution").value,
+      });
+      safetyBox.hidden = true;
+      await loadPipeline(state.pipeline.id);
+    } catch (err) {
+      alert("Erro ao aceitar sugestão: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "✅ Aceitar sugestão e renderizar";
+    }
+  });
+
+  $("#safety-apply-btn")?.addEventListener("click", async () => {
+    const safetyBox = $("#render-safety-box");
+    const segmentIndex = Number(safetyBox.dataset.segmentIndex || 1);
+    try {
+      state.pipeline = await api.post(`/api/pipelines/${state.pipeline.id}/accept-safe-prompt`, {
+        segment_index: segmentIndex,
+        retry_render: false,
+      });
+      safetyBox.hidden = true;
+      renderPipeline();
+      $("#step-3").scrollIntoView({ behavior: "smooth" });
+    } catch (err) {
+      alert("Erro ao aplicar ao storyboard: " + err.message);
+    }
+  });
+
+  $("#safety-dismiss-btn")?.addEventListener("click", () => {
+    const safetyBox = $("#render-safety-box");
+    if (safetyBox) safetyBox.hidden = true;
+  });
+
+  $("#render-next")?.addEventListener("click", () => $("#step-5").scrollIntoView({ behavior: "smooth" }));
+
+  $("#open-config-btn")?.addEventListener("click", openConfigModal);
+  $("#config-modal-close")?.addEventListener("click", closeConfigModal);
+  $("#config-modal-cancel")?.addEventListener("click", closeConfigModal);
+  $("#config-modal")?.addEventListener("click", (event) => {
+    if (event.target.id === "config-modal") closeConfigModal();
+  });
+  $("#config-form")?.addEventListener("submit", saveConfigForm);
+  $("#toggle-gemini-vis")?.addEventListener("click", () => {
+    const input = $("#cfg-gemini-key");
+    if (input) input.type = input.type === "password" ? "text" : "password";
+  });
+  $("#console-note")?.addEventListener("click", openConfigModal);
+  $("#foot-model")?.addEventListener("click", openConfigModal);
 
   $("#render-start").addEventListener("click", async () => {
     try {

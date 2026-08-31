@@ -21,8 +21,29 @@ from . import db, studio
 from .config import settings
 from .timing import TICKS_PER_SECOND, seconds_to_ticks, split_ticks, srt_timestamp
 
-FFMPEG = os.environ.get("VF_FFMPEG") or shutil.which("ffmpeg") or ""
-FFPROBE = os.environ.get("VF_FFPROBE") or shutil.which("ffprobe") or ""
+
+def _find_binary(name: str, env_var: str) -> str:
+    env_val = os.environ.get(env_var, "").strip()
+    if env_val:
+        return env_val
+    which_val = shutil.which(name)
+    if which_val:
+        return which_val
+    if os.name == "nt":
+        localappdata = os.environ.get("LOCALAPPDATA", "")
+        if localappdata:
+            candidate = Path(localappdata) / "Microsoft" / "WinGet" / "Links" / f"{name}.exe"
+            if candidate.exists():
+                return str(candidate)
+            candidate_pkgs = Path(localappdata) / "Microsoft" / "WinGet" / "Packages"
+            if candidate_pkgs.exists():
+                for p in candidate_pkgs.glob(f"**/{name}.exe"):
+                    return str(p)
+    return ""
+
+
+FFMPEG = _find_binary("ffmpeg", "VF_FFMPEG")
+FFPROBE = _find_binary("ffprobe", "VF_FFPROBE")
 
 # rótulo -> (resolução de saída, filtro de recorte, filtro de encaixe)
 #
@@ -82,6 +103,10 @@ class PostProductionUnavailable(studio.StudioError):
 
 
 def available() -> bool:
+    global FFMPEG, FFPROBE
+    if not (FFMPEG and FFPROBE):
+        FFMPEG = _find_binary("ffmpeg", "VF_FFMPEG")
+        FFPROBE = _find_binary("ffprobe", "VF_FFPROBE")
     return bool(FFMPEG and FFPROBE)
 
 
@@ -173,6 +198,7 @@ def build_command(
     normalize_audio: bool = True,
     fade: bool = True,
     subtitle_margin: int = SUBTITLE_MARGIN,
+    subtitle_language: str = SUBTITLE_LANGUAGE,
 ) -> list[str]:
     """Monta o argv do FFmpeg. Isolado para poder ser testado sem executar nada."""
     if subtitle_mode not in SUBTITLE_MODES:
@@ -183,7 +209,10 @@ def build_command(
     video_chain = [frame_filter]
     if burn:
         # o caminho vai dentro do filtro: escapa ':' e '\' como o filtergraph espera
-        escaped = str(subtitles).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+        sub_str = str(subtitles)
+        if not (len(sub_str) > 1 and sub_str[1] == ":"):
+            sub_str = Path(subtitles).as_posix()
+        escaped = sub_str.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
         style = SUBTITLE_STYLE.format(margin=subtitle_margin)
         video_chain.append(f"subtitles='{escaped}':force_style='{style}'")
     if fade:
@@ -199,9 +228,11 @@ def build_command(
         if duration and duration > 1.5:
             audio_chain.append(f"afade=t=out:st={duration - 0.6:.2f}:d=0.6")
 
-    command = [FFMPEG, "-y", "-loglevel", "error", "-i", str(source)]
+    src_str = Path(source).as_posix() if isinstance(source, Path) else str(source)
+    command = [FFMPEG, "-y", "-loglevel", "error", "-i", src_str]
     if soft:
-        command += ["-i", str(subtitles)]
+        sub_in = Path(subtitles).as_posix() if isinstance(subtitles, Path) else str(subtitles)
+        command += ["-i", sub_in]
     command += ["-vf", ",".join(video_chain)]
     if audio_chain:
         command += ["-af", ",".join(audio_chain)]
@@ -211,18 +242,33 @@ def build_command(
         command += [
             "-map", "0:v:0", "-map", "0:a?", "-map", "1:0",
             "-c:s", "mov_text",
-            "-metadata:s:s:0", f"language={SUBTITLE_LANGUAGE}",
+            "-metadata:s:s:0", f"language={subtitle_language}",
             "-disposition:s:0", "default",
         ]
+    dst_str = Path(destination).as_posix() if isinstance(destination, Path) else str(destination)
     command += [
         "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
-        str(destination),
+        dst_str,
     ]
     return command
 
 
 # ------------------------------------------------------------------ execução
+
+
+def extract_first_frame(video: str | Path, destination: str | Path) -> Path:
+    """Primeiro frame de um clipe, em PNG."""
+    _require_ffmpeg()
+    destination = Path(destination)
+    result = subprocess.run(
+        [FFMPEG, "-y", "-loglevel", "error", "-ss", "0.000", "-i", str(video),
+         "-frames:v", "1", str(destination)],
+        capture_output=True, text=True, timeout=300,
+    )
+    if result.returncode != 0 or not destination.exists():
+        raise studio.StudioError(f"Não consegui extrair o primeiro frame: {result.stderr[:300]}")
+    return destination
 
 
 def extract_last_frame(video: str | Path, destination: str | Path) -> Path:
@@ -413,6 +459,9 @@ def create_exports(
             )
 
     segments = pipeline["storyboard"].get("segments") or []
+    lang = (pipeline.get("context") or {}).get("voiceover_language") or "pt-BR"
+    sub_lang = "eng" if lang == "en-US" else "por"
+
     # o .srt é sempre escrito: serve para o modo soft, para o burn e para download
     subtitle_paths: dict[int, Path] = {}
     for line_chars in {LINE_CHARS_BY_FORMAT.get(label, MAX_LINE_CHARS) for label in formats}:
@@ -444,6 +493,7 @@ def create_exports(
                     "overlay_props": overlay_props(pipeline["context"], overlay) if overlay else None,
                     "overlay_start": 1.5 if overlay == "LowerThird" else 0.0,
                     "subtitles": subtitles if srt_path else "none",
+                    "subtitle_language": sub_lang,
                     "normalize_audio": normalize_audio,
                     "fade": fade,
                     "fit": fit,
@@ -494,6 +544,7 @@ def run_export(export_id: str) -> None:
                 if params.get("overlay") == "LowerThird"
                 else SUBTITLE_MARGIN
             ),
+            subtitle_language=params.get("subtitle_language", SUBTITLE_LANGUAGE),
         )
         result = subprocess.run(command, capture_output=True, text=True, timeout=3600)
         if result.returncode != 0 or not destination.exists():
