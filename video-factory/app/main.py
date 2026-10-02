@@ -93,6 +93,11 @@ class SegmentActionIn(BaseModel):
     resolution: str | None = None
 
 
+class FitVoiceoverIn(BaseModel):
+    segment_index: int = 1
+    text: str | None = None  # locução atual na tela, ainda não salva
+
+
 class ExportIn(BaseModel):
     formats: list[str] = Field(default_factory=lambda: ["16:9"])
     fit: str = "crop"
@@ -282,6 +287,22 @@ def post_pipeline_render(pipeline_id: str, payload: PipelineRenderIn) -> dict:
 def post_rephrase_segment(pipeline_id: str, payload: SegmentActionIn) -> dict:
     return _guard(
         pipeline_mod.rephrase_segment, pipeline_id, payload.segment_index, payload.auto_apply
+    )
+
+
+@app.post("/api/pipelines/{pipeline_id}/fit-voiceover")
+def post_fit_voiceover(pipeline_id: str, payload: FitVoiceoverIn) -> dict:
+    """Propõe uma locução que cabe na peça. Não grava nada: o usuário decide."""
+    from . import voice_fit
+
+    pipeline = _guard(pipeline_mod.get_pipeline, pipeline_id)
+    segments = (pipeline["storyboard"] or {}).get("segments") or []
+    if not 1 <= payload.segment_index <= len(segments):
+        raise HTTPException(status_code=404, detail=f"Peça {payload.segment_index} não existe.")
+    text = payload.text if payload.text is not None else segments[payload.segment_index - 1].get("vo", "")
+    limit = int(pipeline_mod.SEGMENT_SECONDS * pipeline_mod.VO_WORDS_PER_SECOND)
+    return voice_fit.fit_voiceover(
+        text, limit, pipeline["context"].get("voiceover_language") or "pt-BR", pipeline["context"]
     )
 
 
