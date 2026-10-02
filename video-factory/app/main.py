@@ -29,6 +29,7 @@ app = FastAPI(title="Video Factory", version="1.0.0")
 @app.on_event("startup")
 def _startup() -> None:
     db.init_db()
+    studio.recover_interrupted()
 
 
 # --------------------------------------------------------------------------- schemas
@@ -56,6 +57,8 @@ class GenerationIn(BaseModel):
 
 
 class PipelineIn(BaseModel):
+    title: str = ""
+    source_reference: str = ""
     brand: str = ""
     product: str = ""
     audience: str = ""
@@ -80,6 +83,7 @@ class PipelineUpdateIn(BaseModel):
 
 class PipelineRenderIn(BaseModel):
     resolution: str | None = None
+    force: bool = False
 
 
 class SegmentActionIn(BaseModel):
@@ -270,7 +274,7 @@ def post_pipeline_prompts(pipeline_id: str) -> dict:
 
 @app.post("/api/pipelines/{pipeline_id}/render", status_code=202)
 def post_pipeline_render(pipeline_id: str, payload: PipelineRenderIn) -> dict:
-    return _guard(pipeline_mod.render, pipeline_id, payload.resolution)
+    return _guard(pipeline_mod.render, pipeline_id, payload.resolution, payload.force)
 
 
 @app.post("/api/pipelines/{pipeline_id}/rephrase-segment")
@@ -341,6 +345,7 @@ def get_subtitles(pipeline_id: str):
         pipeline["storyboard"].get("segments") or [],
         pipeline_mod.SEGMENT_SECONDS,
         postproduction.LINE_CHARS_BY_FORMAT["16:9"],
+        durations=postproduction.piece_durations(pipeline),
     )
     return Response(content=srt, media_type="text/plain; charset=utf-8")
 

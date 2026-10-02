@@ -368,6 +368,27 @@ caminho do pipeline, que renderiza os cortes do storyboard com a chave de API.
 
 ---
 
+## Aderência do storyboard e robustez do render
+
+- **O template local fala o que você escreveu.** Sem chave de texto, cada ato diz o campo
+  correspondente (problema, virada, valor, CTA), só normalizando espaço e pontuação. Não completa
+  com frases que você não pediu e não tem mais cenas de "legacy" fixas.
+- **Um ato, uma peça.** Os atos são divididos em ordem e sem repetição (antes, o filme de 40s
+  repetia o CTA), balanceando as palavras de locução por peça.
+- **Locução maior que a janela vira aviso.** Cabem ~25 palavras em 10s; acima disso o storyboard
+  traz o aviso com as peças afetadas, em vez de cortar sua fala.
+- **Elenco, estética e referência vão em toda peça.** Quem não estende cena (Sora-2, Kling, Wan)
+  só recebe o último frame da peça anterior, então os blocos `CHARACTERS` e `ACTIVE REFERENCE`
+  repetem nas continuações. `<<<image_1>>>` só aparece quando há imagem anexada.
+- **Título e fonte** (`title`, `source_reference`) são campos do contexto.
+- **Render que falha retoma.** Peças concluídas, com o mesmo prompt, resolução e proporção, não
+  são geradas (nem pagas) de novo; `force: true` refaz tudo.
+- **Reinício do servidor** libera pipelines presos em "rendering".
+- **Legendas seguem a duração real** das peças quando elas são independentes (keyframe).
+- **Sora-2:** a duração de 10s sobe para 12s (antes caía para 8s e cortava a fala).
+
+---
+
 ## Notas honestas
 
 - O custo aparece em **unidades relativas** (360p = 1/3 de 720p), não em dólares: serve para
