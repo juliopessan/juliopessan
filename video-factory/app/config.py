@@ -41,6 +41,8 @@ class Settings:
     api_key: str
     azure_endpoint: str
     azure_api_key: str
+    higgsfield_key_id: str
+    higgsfield_key_secret: str
     provider: str
     model: str
     storage_dir: Path
@@ -64,13 +66,19 @@ class Settings:
         return bool(self.azure_endpoint and self.azure_api_key)
 
     @property
+    def has_higgsfield(self) -> bool:
+        return bool(self.higgsfield_key_id and self.higgsfield_key_secret)
+
+    @property
     def effective_provider(self) -> str:
-        """`auto`: Gemini se houver chave, senão Azure, senão mock."""
+        """`auto`: Gemini se houver chave, senão Azure, senão Higgsfield, senão mock."""
         if self.provider != "auto":
             return self.provider
         if self.api_key:
             return "gemini"
-        return "azure" if self.has_azure else "mock"
+        if self.has_azure:
+            return "azure"
+        return "higgsfield" if self.has_higgsfield else "mock"
 
 
 def get_settings() -> Settings:
@@ -81,6 +89,8 @@ def get_settings() -> Settings:
         api_key=os.environ.get("GEMINI_API_KEY", "").strip(),
         azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip(),
         azure_api_key=os.environ.get("AZURE_OPENAI_API_KEY", "").strip(),
+        higgsfield_key_id=os.environ.get("HIGGSFIELD_KEY_ID", "").strip(),
+        higgsfield_key_secret=os.environ.get("HIGGSFIELD_KEY_SECRET", "").strip(),
         provider=os.environ.get("VF_PROVIDER", "auto").strip().lower(),
         model=os.environ.get("VF_MODEL", "gemini-omni-1.1-flash").strip(),
         storage_dir=storage,
@@ -108,6 +118,10 @@ def update_settings(updates: dict[str, str | None]) -> Settings:
         "azure_deployment": "VF_AZURE_DEPLOYMENT",
         "azure_api_version": "VF_AZURE_API_VERSION",
         "azure_api_style": "VF_AZURE_API_STYLE",
+        "higgsfield_key_id": "HIGGSFIELD_KEY_ID",
+        "higgsfield_key_secret": "HIGGSFIELD_KEY_SECRET",
+        "higgsfield_model": "VF_HIGGSFIELD_MODEL",
+        "higgsfield_tier": "VF_HIGGSFIELD_TIER",
         "ffmpeg": "VF_FFMPEG",
         "ffprobe": "VF_FFPROBE",
     }

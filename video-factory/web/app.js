@@ -1,6 +1,13 @@
 /* Video Factory — cliente da API local. Sem framework, sem build. */
 
 const $ = (sel, root = document) => root.querySelector(sel);
+
+function modelLabel(cfg) {
+  if (cfg.provider === "azure") return "sora-2 · foundry";
+  if (cfg.provider === "higgsfield") return `${cfg.higgsfield_model || "kling-3.0"} · higgsfield`;
+  return cfg.model;
+}
+
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
 const state = {
@@ -86,6 +93,15 @@ function openConfigModal() {
   const azStyle = $("#cfg-azure-style");
   if (azStyle) azStyle.value = cfg.azure_api_style || "videos";
 
+  const hfId = $("#cfg-hf-key-id");
+  if (hfId) hfId.value = cfg.higgsfield_key_id || "";
+  const hfSecret = $("#cfg-hf-key-secret");
+  if (hfSecret) hfSecret.value = "";
+  const hfModel = $("#cfg-hf-model");
+  if (hfModel) hfModel.value = cfg.higgsfield_model || "kling-3.0";
+  const hfTier = $("#cfg-hf-tier");
+  if (hfTier) hfTier.value = cfg.higgsfield_tier || "std";
+
   const ffmpegInput = $("#cfg-ffmpeg-path");
   if (ffmpegInput) ffmpegInput.value = cfg.ffmpeg_path || "";
 
@@ -119,7 +135,7 @@ function openConfigModal() {
   if (providerBox && providerTxt) {
     providerBox.className = "status-item active";
     providerTxt.textContent = `${cfg.provider || "mock"}${
-      cfg.provider === "gemini" ? " (Omni Flash)" : cfg.provider === "azure" ? " (Sora-2)" : " (Offline)"
+      cfg.provider === "gemini" ? " (Omni Flash)" : cfg.provider === "azure" ? " (Sora-2)" : cfg.provider === "higgsfield" ? ` (${cfg.higgsfield_model || "Kling 3.0"})` : " (Offline)"
     }`;
   }
 
@@ -155,13 +171,17 @@ async function saveConfigForm(event) {
       azure_api_key: $("#cfg-azure-key").value.trim() || undefined,
       azure_deployment: $("#cfg-azure-deployment").value.trim() || undefined,
       azure_api_style: $("#cfg-azure-style").value || undefined,
+      higgsfield_key_id: $("#cfg-hf-key-id").value.trim() || undefined,
+      higgsfield_key_secret: $("#cfg-hf-key-secret").value.trim() || undefined,
+      higgsfield_model: $("#cfg-hf-model").value || undefined,
+      higgsfield_tier: $("#cfg-hf-tier").value || undefined,
       ffmpeg: $("#cfg-ffmpeg-path").value.trim() || undefined,
     };
     state.config = await api.post("/api/config", payload);
 
     const chaining = state.config.chaining === "keyframe" ? " · encadeia por keyframe" : "";
     $("#runtime-badge").textContent =
-      `${state.config.provider === "azure" ? "sora-2 · foundry" : state.config.model} · provider ${
+      `${modelLabel(state.config)} · provider ${
         state.config.provider
       }${chaining}` + (state.config.text_available ? ` · texto ${state.config.text_model}` : " · texto local");
     $("#foot-model").textContent = state.config.has_api_key ? "gemini api conectada" : "modo mock — sem api key";
@@ -1066,7 +1086,7 @@ async function boot() {
 
   const chaining = state.config.chaining === "keyframe" ? " · encadeia por keyframe" : "";
   $("#runtime-badge").textContent =
-    `${state.config.provider === "azure" ? "sora-2 · foundry" : state.config.model} · provider ${state.config.provider}${chaining}` +
+    `${modelLabel(state.config)} · provider ${state.config.provider}${chaining}` +
     (state.config.text_available ? ` · texto ${state.config.text_model}` : " · texto local");
   $("#foot-model").textContent = state.config.has_api_key ? "gemini api conectada" : "modo mock — sem api key";
 

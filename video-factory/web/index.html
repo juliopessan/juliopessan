@@ -316,9 +316,10 @@
         <label class="field">
           <span>Provedor de Vídeo</span>
           <select name="provider" id="cfg-provider">
-            <option value="auto">Auto (Gemini se houver chave, senão Azure, senão Mock)</option>
+            <option value="auto">Auto (Gemini se houver chave, senão Azure, senão Higgsfield, senão Mock)</option>
             <option value="gemini">Google Gemini (Omni 1.1 Flash)</option>
             <option value="azure">Azure Foundry (Sora-2)</option>
+            <option value="higgsfield">Higgsfield (Kling 3.0 / Wan 3.0)</option>
             <option value="mock">Mock offline (Local, sem gastar cota)</option>
           </select>
         </label>
@@ -360,6 +361,41 @@
                 </select>
               </label>
             </div>
+          </div>
+        </details>
+
+        <!-- Higgsfield (Collapsible) -->
+        <details class="config-accordion" id="cfg-higgsfield-details">
+          <summary>Credenciais Higgsfield (Kling 3.0 / Wan 3.0)</summary>
+          <div class="accordion-content">
+            <div class="grid-2col">
+              <label class="field">
+                <span>Key ID</span>
+                <input name="higgsfield_key_id" id="cfg-hf-key-id" placeholder="KEY_ID" autocomplete="off" />
+              </label>
+              <label class="field">
+                <span>Key Secret</span>
+                <input type="password" name="higgsfield_key_secret" id="cfg-hf-key-secret" placeholder="KEY_SECRET" autocomplete="off" />
+              </label>
+            </div>
+            <div class="grid-2col">
+              <label class="field">
+                <span>Modelo</span>
+                <select name="higgsfield_model" id="cfg-hf-model">
+                  <option value="kling-3.0">Kling 3.0 (3–15 s)</option>
+                  <option value="wan-3.0">Wan 3.0 (2–30 s)</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Tier do Kling</span>
+                <select name="higgsfield_tier" id="cfg-hf-tier">
+                  <option value="std">std</option>
+                  <option value="pro">pro</option>
+                  <option value="4k">4k</option>
+                </select>
+              </label>
+            </div>
+            <small class="field-help">Chave em <a href="https://console.higgsfield.ai" target="_blank" rel="noopener">console.higgsfield.ai ↗</a>. Não estende cena: o pipeline encadeia por keyframe.</small>
           </div>
         </details>
 

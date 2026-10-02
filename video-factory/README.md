@@ -215,15 +215,16 @@ packshot com logo centralizado perde as pontas da marca; `pad` preserva o quadro
 
 ## Provedores de vídeo
 
-| | Gemini Omni 1.1 Flash | Sora-2 (Microsoft Foundry) |
-|---|---|---|
-| `VF_PROVIDER` | `gemini` | `azure` |
-| Credencial | `GEMINI_API_KEY` | `AZURE_OPENAI_ENDPOINT` + `AZURE_OPENAI_API_KEY` |
-| Extensão de cena | sim, via `previous_interaction_id` | não — encadeia por **keyframe** |
-| Resoluções | 360p → 4K | 1280x720 / 720x1280 |
-| Durações | livres | 4, 8 ou 12s (arredonda para a mais próxima) |
-| Referência de vídeo | até 3, ≤ 3s cada | imagem (`input_reference`) |
-| Edição generativa | tasks `edit` / `extend` | *remix* de um vídeo gerado |
+| | Gemini Omni 1.1 Flash | Sora-2 (Microsoft Foundry) | Kling 3.0 / Wan 3.0 (Higgsfield) |
+|---|---|---|---|
+| `VF_PROVIDER` | `gemini` | `azure` | `higgsfield` |
+| Credencial | `GEMINI_API_KEY` | `AZURE_OPENAI_ENDPOINT` + `AZURE_OPENAI_API_KEY` | `HIGGSFIELD_KEY_ID` + `HIGGSFIELD_KEY_SECRET` |
+| Extensão de cena | sim, via `previous_interaction_id` | não — encadeia por **keyframe** | não — encadeia por **keyframe** |
+| Resoluções | 360p → 4K | 1280x720 / 720x1280 | Kling: tier `std` / `pro` / `4k`; Wan: 480p / 720p / 1080p |
+| Durações | livres | 4, 8 ou 12s (arredonda) | Kling 3–15s; Wan 2–30s (limita à faixa) |
+| Proporções | 16:9, 9:16 | 16:9, 9:16 | 16:9, 9:16, 1:1 |
+| Referência de vídeo | até 3, ≤ 3s cada | imagem (`input_reference`) | primeiro e último frame |
+| Edição generativa | tasks `edit` / `extend` | *remix* de um vídeo gerado | — |
 
 Chamada ao Omni, em resumo:
 
@@ -311,6 +312,7 @@ app/
     base.py          contrato VideoRequest / VideoResult e capacidades
     gemini.py        client.interactions.create + polling até `completed`
     azure_sora.py    Sora-2 no Foundry: criar job, consultar, baixar, listar, apagar
+    higgsfield.py    Kling 3.0 / Wan 3.0: fila do Higgsfield (job → status → MP4)
     mock.py          clipe sintético (MP4 com FFmpeg, senão SVG) para rodar offline
   main.py            API HTTP + entrega da interface
 web/                 interface (HTML + CSS + JS, sem build)
@@ -327,6 +329,22 @@ Além do pipeline, a interface traz o **Studio** (clipe avulso: texto, frame ini
 entre primeiro e último frame, referências, extensão e upscale 1080p/4K) e o **Draft Room**
 (variações em 360p lado a lado, com promoção da vencedora para a resolução final).
 
+**Sobre o Higgsfield (Kling 3.0 e Wan 3.0):** a API usa `Authorization: Key KEY_ID:KEY_SECRET` em
+`https://api.higgsfield.ai` (chave criada em [console.higgsfield.ai](https://console.higgsfield.ai),
+conta de API com saldo). O provider envia o job, consulta `/requests/{id}/status` e baixa o MP4 da
+URL do resultado. `VF_HIGGSFIELD_MODEL` escolhe `kling-3.0` ou `wan-3.0`; `VF_HIGGSFIELD_TIER`
+escolhe `std`, `pro` ou `4k` no Kling. O caminho do Kling (`kling-video/v3.0/{tier}/text-to-video`),
+a base URL, o `Authorization` e o endpoint de status vêm de fontes públicas; o caminho do Wan, o
+sufixo `image-to-video`, os nomes dos campos do corpo e o formato do resultado são **inferidos**
+(o ambiente de desenvolvimento não alcança `higgsfield.ai`). Testado com transporte HTTP falso, não
+contra a API real; `VF_HIGGSFIELD_PATH` troca o caminho sem mexer no código se o primeiro render
+mostrar diferença.
+
+**Higgsfield por MCP:** o [`.mcp.json`](.mcp.json) também registra `https://mcp.higgsfield.ai/mcp`
+(login por navegador, sem chave). É o caminho exploratório: pelo cliente MCP, um agente escolhe
+modelo, confere o custo (`get_cost`) e gera sem passar pelo pipeline. Já o provider acima é o
+caminho do pipeline, que renderiza os cortes do storyboard com a chave de API.
+
 ---
 
 ## Configuração
@@ -335,7 +353,9 @@ entre primeiro e último frame, referências, extensão e upscale 1080p/4K) e o 
 |---|---|---|
 | `GEMINI_API_KEY` | — | chave da Gemini API |
 | `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_API_KEY` | — | recurso do Foundry com o sora-2 |
-| `VF_PROVIDER` | `auto` | `gemini`, `azure`, `mock` ou `auto` |
+| `HIGGSFIELD_KEY_ID` / `HIGGSFIELD_KEY_SECRET` | — | chave de API do Higgsfield (Kling 3.0 / Wan 3.0) |
+| `VF_HIGGSFIELD_MODEL` / `VF_HIGGSFIELD_TIER` | `kling-3.0` / `std` | modelo e, no Kling, o tier |
+| `VF_PROVIDER` | `auto` | `gemini`, `azure`, `higgsfield`, `mock` ou `auto` |
 | `VF_MODEL` | `gemini-omni-1.1-flash` | modelo de vídeo |
 | `VF_TEXT_MODEL` | `gemini-flash-latest` | modelo de texto do roteiro/storyboard |
 | `VF_AZURE_DEPLOYMENT` | `sora-2` | nome do deployment no Foundry |
