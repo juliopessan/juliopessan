@@ -368,6 +368,18 @@ caminho do pipeline, que renderiza os cortes do storyboard com a chave de API.
 
 ---
 
+### Render ao vivo no terminal
+
+```bash
+export HIGGSFIELD_CREDENTIALS='KEY_ID:KEY_SECRET'    # só no ambiente, nunca em arquivo
+python3 live_render.py --provider higgsfield --model kling-3.0 --duration 10
+```
+
+Roda o pipeline de verdade (contexto → storyboard → render) e mostra cada etapa, a advertência de
+locução e um contador por peça. Mostra o plano e **pede confirmação antes de gastar créditos**
+(`--yes` pula). Sem `--provider` roda no mock, offline. Um render que falha retoma das peças
+concluídas ao ser rodado de novo.
+
 ## Aderência do storyboard e robustez do render
 
 - **O template local fala o que você escreveu.** Sem chave de texto, cada ato diz o campo
