@@ -81,8 +81,16 @@ for duration in (20, 30, 40):
 
 ctx = P.normalize_context(ABECE)
 board = P.build_storyboard(ctx, P.build_story(ctx))
-check("locução longa gera aviso explícito (não é cortada em silêncio)",
-      "Locução acima" in (board.get("warning") or ""), str(board.get("warning")))
+report = board.get("vo_overflow") or {}
+check("locução longa gera advertência estruturada (não é cortada em silêncio)",
+      report.get("limit_words") == 25 and [p["index"] for p in report["pieces"]] == [2, 3]
+      and [p["words"] for p in report["pieces"]] == [43, 31], str(report))
+check("a fala do usuário segue intacta junto com a advertência",
+      norm(ctx["problem"]) in " ".join(s["vo"] for s in board["segments"]).lower())
+short = P.normalize_context({**ABECE, "problem": "IA ainda parece distante", "value": "mais confiança no Copilot",
+                             "turning_point": "o Copilot liga a IA ao seu trabalho", "duration_seconds": 30})
+check("locução curta não gera advertência",
+      P.build_storyboard(short, P.build_story(short))["vo_overflow"]["pieces"] == [])
 check("source_reference chega ao contexto do modelo", ctx["source_reference"] == "Reference slides: 3 to 10")
 
 # 40s: 5 atos em 4 peças, sem repetir o CTA

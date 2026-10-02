@@ -406,6 +406,7 @@ function renderBoard() {
           <span class="mode">${escapeHtml(segment.mode || "")}</span>
           <span class="mode">${segment.duration_seconds}s</span>
           <span class="grow"></span>
+          <span class="pill vo-over" data-vo-badge hidden></span>
           <span class="pill">atos ${(segment.acts || []).join(", ")}</span>
           <span class="pill beat-pill">${(segment.script_beats || []).join(" → ")}</span>
         </header>
@@ -441,9 +442,37 @@ function renderBoard() {
       </article>`
     )
     .join("");
+  updateVoWarning();
   $("#board-note").textContent = `${board.segments.length} peças de ${state.config.segment_seconds}s · ${
     board.segments.length * state.config.segment_seconds
   }s no total`;
+}
+
+/* Advertência de locução longa: recalculada a cada edição, a partir do texto que
+   está na tela. A fala nunca é cortada; só avisamos que não cabe na janela. */
+function updateVoWarning() {
+  const limit = state.config.vo_limit_words;
+  const seconds = state.config.segment_seconds;
+  const over = [];
+  $$("#segments .segment").forEach((node) => {
+    const words = ($('textarea[data-field="vo"]', node).value.trim().match(/\S+/g) || []).length;
+    const badge = $("[data-vo-badge]", node);
+    const tooLong = words > limit;
+    badge.hidden = !tooLong;
+    badge.textContent = tooLong ? `${words} palavras · máx. ${limit}` : "";
+    if (tooLong) over.push({ piece: Number(node.dataset.index) + 1, words });
+  });
+  const box = $("#vo-warning");
+  box.hidden = !over.length;
+  if (!over.length) return;
+  const list = over.map((o) => `<li>Peça ${o.piece}: <b>${o.words} palavras</b> (cabem cerca de ${limit})</li>`).join("");
+  box.innerHTML = `<span class="bang">!</span><div>
+    <b>Advertência: a locução não cabe em ${seconds} s.</b> Ao falar tudo isso, o modelo acelera a fala ou
+    corta a frase no meio. Seu texto não foi alterado.
+    <ul>${list}</ul>
+    <div style="margin-top:8px">Para resolver: encurte o texto do problema, da virada ou do valor de negócio,
+    ou aumente a duração do filme (até ${state.config.max_cumulative_seconds} s) para espalhar a fala em mais peças.</div>
+  </div>`;
 }
 
 function highlightPrompt(prompt) {
@@ -895,6 +924,9 @@ function bindEvents() {
     renderPipeline();
   });
   $("#board-next").addEventListener("click", () => $("#step-4").scrollIntoView({ behavior: "smooth" }));
+  $("#segments").addEventListener("input", (event) => {
+    if (event.target.matches('textarea[data-field="vo"]')) updateVoWarning();
+  });
   $("#segments").addEventListener("click", async (event) => {
     const copyIndex = event.target.dataset.copy;
     if (copyIndex !== undefined) {

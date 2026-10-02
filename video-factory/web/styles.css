@@ -580,3 +580,13 @@ input[type=file] { border: 0; font-size: 13px; padding-left: 0; }
   .field.wide { grid-column: span 1; }
   .step-head { grid-template-columns: 1fr; }
 }
+
+/* advertência: locução maior que a janela da peça */
+.vo-warning { display: flex; gap: 14px; align-items: flex-start; margin: 0 0 18px; padding: 16px 18px;
+  border: 1px solid var(--amber); border-left-width: 4px; background: #fff8eb; font-size: 13px; line-height: 1.55; }
+.vo-warning[hidden] { display: none; }
+.vo-warning .bang { background: var(--amber); color: var(--panel); width: 22px; height: 22px; display: grid;
+  place-items: center; font-weight: 700; flex: none; }
+.vo-warning b { font-weight: 700; }
+.vo-warning ul { margin: 6px 0 0; padding-left: 18px; }
+.pill.vo-over { background: #fff8eb; border-color: var(--amber); color: var(--ink); }

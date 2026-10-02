@@ -452,23 +452,20 @@ def build_storyboard(context: dict, story: dict) -> dict:
         segment["duration_seconds"] = SEGMENT_SECONDS
         segment["mode"] = "extend" if index else _first_mode(context)
         segment["prompt"] = render_prompt(context, story, board, segment, index)
-    overflow = vo_overflow(segments)
-    if overflow:
-        note = (
-            "Locução acima do que cabe em 10s (~"
-            f"{int(SEGMENT_SECONDS * VO_WORDS_PER_SECOND)} palavras): "
-            + "; ".join(f"peça {i} tem {w}" for i, w in overflow)
-            + ". Encurte o roteiro ou aumente a duração."
-        )
-        board["warning"] = f"{board['warning']} {note}".strip() if board.get("warning") else note
+    board["vo_overflow"] = vo_overflow_report(segments)
     return board
 
 
-def vo_overflow(segments: list[dict]) -> list[tuple[int, int]]:
-    """Peças cuja locução tem mais palavras do que cabe em SEGMENT_SECONDS."""
+def vo_overflow_report(segments: list[dict]) -> dict:
+    """Advertência estruturada: peças cuja locução tem mais palavras do que cabe
+    em SEGMENT_SECONDS. A UI mostra o aviso; a fala do usuário nunca é cortada."""
     limit = int(SEGMENT_SECONDS * VO_WORDS_PER_SECOND)
-    return [(s["index"], len((s.get("vo") or "").split())) for s in segments
-            if len((s.get("vo") or "").split()) > limit]
+    pieces = [
+        {"index": s.get("index", i + 1), "words": len((s.get("vo") or "").split())}
+        for i, s in enumerate(segments)
+        if len((s.get("vo") or "").split()) > limit
+    ]
+    return {"limit_words": limit, "pieces": pieces}
 
 
 def _first_mode(context: dict) -> str:
@@ -737,6 +734,7 @@ def update_pipeline(pipeline_id: str, story: dict | None = None, storyboard: dic
                 segment["prompt"] = render_prompt(
                     pipeline["context"], story or pipeline["story"], storyboard, segment, index
                 )
+        storyboard["vo_overflow"] = vo_overflow_report(storyboard.get("segments", []))
         data["storyboard"] = json.dumps(storyboard, ensure_ascii=False)
     if data:
         data["updated_at"] = db.now()

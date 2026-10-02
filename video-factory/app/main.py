@@ -159,6 +159,7 @@ def read_config() -> dict:
         "resolutions": list(RESOLUTIONS),
         "aspect_ratios": list(ASPECT_RATIOS),
         "clip_seconds": CLIP_SECONDS,
+        "vo_limit_words": int(pipeline_mod.SEGMENT_SECONDS * pipeline_mod.VO_WORDS_PER_SECOND),
         "extension_seconds": EXTENSION_SECONDS,
         "max_cumulative_seconds": MAX_CUMULATIVE_SECONDS,
         "max_reference_videos": MAX_REFERENCE_VIDEOS,
