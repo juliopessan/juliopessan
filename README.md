@@ -1,6 +1,6 @@
 # Julio Pessan
 
-### Senior AI Engineer | Enterprise AI Architecture | Agentic Engineering
+### Head AI Engineer | Enterprise AI Architecture | Agentic Engineering
 
 I design and build enterprise AI systems that connect **LLMs, autonomous agents, software engineering and business operations**. My work spans solution architecture, intelligent document processing, API integration, delivery automation, and operational reliability.
 
